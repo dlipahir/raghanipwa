@@ -1,0 +1,49 @@
+{
+  "name": "wc-pathsala-mobile",
+  "private": true,
+  "version": "1.0.0",
+  "description": "WC Pathsala Mobile App - Attendance Management",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host",
+    "build": " vite build",
+    "lint": "eslint .",
+    "preview": "vite preview",
+    "start": "vite preview --host"
+  },
+  "dependencies": {
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.1",
+    "@fontsource/roboto": "^5.2.8",
+    "@mui/icons-material": "^6.5.0",
+    "@mui/material": "^6.5.0",
+    "@mui/x-date-pickers": "^8.11.3",
+    "@zxing/browser": "^0.1.5",
+    "axios": "^1.12.2",
+    "dayjs": "^1.11.18",
+    "pdfmake": "^0.2.20",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-pdf": "^10.1.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.17.0",
+    "@types/react": "^18.3.17",
+    "@types/react-dom": "^18.3.5",
+    "@types/react-router-dom": "^5.3.3",
+    "@vitejs/plugin-react": "^4.3.4",
+    "eslint": "^9.17.0",
+    "eslint-plugin-react-hooks": "^5.0.0",
+    "eslint-plugin-react-refresh": "^0.4.16",
+    "globals": "^15.14.0",
+    "lucide-react": "^0.468.0",
+    "react-router-dom": "^6.28.0",
+    "typescript": "~5.8.3",
+    "vite": "^6.0.7",
+    "vite-plugin-pwa": "^0.21.1",
+    "workbox-window": "^7.3.0"
+  },
+  "overrides": {
+    "react-is": "^18.3.1"
+  }
+}
