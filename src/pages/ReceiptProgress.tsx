@@ -59,7 +59,7 @@ const ReceiptProgress = () => {
 
         setStatusText("Processing receipt...");
         setCurrentStep(3);
-        const jsonDataRes = await getProcessedInvoiceJsons(51);
+        const jsonDataRes = await getProcessedInvoiceJsons(receipt_id);
 
         setStatusText("Generating PDF...");
         setDone(true);

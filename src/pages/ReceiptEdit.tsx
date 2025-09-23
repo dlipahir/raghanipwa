@@ -22,6 +22,7 @@ import {
 import DeleteIcon from "@mui/icons-material/Delete";
 import AddIcon from "@mui/icons-material/Add";
 import { useTheme } from "@mui/material/styles";
+import CustomerModal from "@/components/CustomerModal";
 
 interface ReceiptDataItem {
   [key: string]: any;
@@ -32,8 +33,6 @@ interface ReceiptDataItem {
   lr_date?: string;
   shop_name?: string;
 }
-
-
 
 const defaultHeaders = [
   { key: "S.No", label: "S.No" },
@@ -46,18 +45,63 @@ const defaultHeaders = [
 ];
 
 const ReceiptEdit = () => {
-
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const navigate = useNavigate();
   const location = useLocation();
-  const { receipt_id, receiptData }= (location.state) || {};
+  const { receipt_id, receiptData } = location.state || {};
+//   console.log("receiptData:", JSON.stringify(receiptData));
+// const receipt_id = 100
+// const receiptData = [
+//     {
+//       _id: "68d0fb6a17352e33cc96668f",
+//       customer:null,
+//     //   customer: {
+//     //     _id: "68d2f7344a2de7a6fe2976cb",
+//     //     shop_name: "KP Exports",
+//     //     city: "Siliguri",
+//     //     state: "West Bengal",
+//     //     gst_no: "19ADTPT5557H1ZM",
+//     //     createdAt: "2025-09-23T19:38:28.299Z",
+//     //     updatedAt: "2025-09-23T19:38:28.299Z",
+//     //     __v: 0
+//     //   },
+//     seller:null,
+//     //   seller: {
+//     //     _id: "68d2f5d835d9a523d3a7c3a1",
+//     //     shop_name: "OMKKAR KURTIES PRIVATE LIMITED",
+//     //     city: "Ahmedabad",
+//     //     state: "Gujarat",
+//     //     gst_no: "24AAECO4189R1ZP",
+//     //     createdAt: "2025-09-23T19:32:40.705Z",
+//     //     updatedAt: "2025-09-23T19:32:40.705Z",
+//     //     __v: 0
+//     //   },
+//       shop_name: "OMKKAR KURTIES PRIVATE LIMITED",
+//       shop_gst: "24AAECO4189R1ZP",
+//       shop_city: "Ahmedabad",
+//       shop_state: "Gujarat",
+//       party_name: "KP Exports",
+//       party_gst: "19ADTPT5557H1ZM",
+//       party_city: "Siliguri",
+//       party_state: "West Bengal",
+//       station: "West Bengal",
+//       bill_no: "10846",
+//       bill_date: "11/09/2025",
+//       lr_no: "713757X1",
+//       lr_date: "15/09/2025"
+//     }
+//   ]
 
-  const [headers] = useState<{ key: string; label: string }[]>([...defaultHeaders]);
+  const [headers] = useState<{ key: string; label: string }[]>([
+    ...defaultHeaders,
+  ]);
   const [data, setData] = useState<ReceiptDataItem[]>(() =>
     receiptData.map((row) => ({ ...row }))
   );
-  const [shopname, setShopName] = useState(receiptData?.[0]?.["shop_name"] || "");
+  const [shopname, setShopName] = useState(
+    receiptData?.[0]?.["shop_name"] || ""
+  );
 
   const [errorFields, setErrorFields] = useState<{
     shopname: boolean;
@@ -68,7 +112,9 @@ const ReceiptEdit = () => {
   });
 
   const shopNameInputRef = useRef<HTMLInputElement>(null);
-  const inputRefs = useRef<{ [rowIdx: number]: { [colKey: string]: HTMLInputElement | null } }>({});
+  const inputRefs = useRef<{
+    [rowIdx: number]: { [colKey: string]: HTMLInputElement | null };
+  }>({});
 
   const handleCellChange = (rowIdx: number, colKey: string, value: string) => {
     setData((prev) => {
@@ -126,7 +172,11 @@ const ReceiptEdit = () => {
       headers.forEach((header) => {
         if (header.key === "S.No") return;
         const value = row[header.key];
-        if (value === undefined || value === null || String(value).trim() === "") {
+        if (
+          value === undefined ||
+          value === null ||
+          String(value).trim() === ""
+        ) {
           if (!newErrorFields.rows[rowIdx]) newErrorFields.rows[rowIdx] = {};
           newErrorFields.rows[rowIdx][header.key] = true;
           hasError = true;
@@ -162,16 +212,57 @@ const ReceiptEdit = () => {
       return;
     }
 
-    navigate("/receipt-completed", { state: { receipt_id, data, shopname }, replace: true });
+    navigate("/receipt-completed", {
+      state: { receipt_id, data, shopname },
+      replace: true,
+    });
   };
 
-  const registerInputRef = (rowIdx: number, colKey: string, el: HTMLInputElement | null) => {
+  const registerInputRef = (
+    rowIdx: number,
+    colKey: string,
+    el: HTMLInputElement | null
+  ) => {
     if (!inputRefs.current[rowIdx]) inputRefs.current[rowIdx] = {};
     inputRefs.current[rowIdx][colKey] = el;
   };
 
   return (
-    <>
+    <div>
+      {data.length > 0 &&
+        data.map(
+          (row, idx) =>
+            !row.customer && (
+              <CustomerModal
+                key={`c${idx}`}
+                type="Customer"
+                Customerdata={{
+                  shop_name: row.party_name,
+                  city: row.party_city,
+                  state: row.party_state,
+                  gst_no: row.party_gst,
+                }}
+              />
+            )
+        )}
+
+      {data.length > 0 &&
+        data.map(
+          (row, idx) =>
+            !row.seller && (
+              <CustomerModal
+                key={`s${idx}`}
+                type="Seller "
+                Customerdata={{
+                  shop_name: row.shop_name,
+                  city: row.shop_city,
+                  state: row.shop_state,
+                  gst_no: row.shop_gst,
+                }}
+              />
+            )
+        )}
+
       <Box
         sx={{
           maxWidth: 900,
@@ -181,7 +272,7 @@ const ReceiptEdit = () => {
           border: "1px solid #eee",
           borderRadius: 2,
           boxShadow: 2,
-          p: { xs: 2, sm: 4 },
+          p: { sm: 4 },
           fontFamily: "Roboto, Arial, sans-serif",
         }}
       >
@@ -199,7 +290,7 @@ const ReceiptEdit = () => {
               style={{ width: 110, height: 110, objectFit: "contain" }}
             />
           </Box>
-          <Box sx={{ flex: 1, textAlign: "center" }}>
+          {/* <Box sx={{ flex: 1, textAlign: "center" }}>
             <Typography
               variant="h4"
               sx={{
@@ -208,7 +299,7 @@ const ReceiptEdit = () => {
                 color: "#222",
                 lineHeight: 1.1,
                 fontSize: { xs: "7vw", sm: 32 },
-                textAlign: { xs: "left", sm: "center" },
+                textAlign: { xs: "center", sm: "center" },
               }}
               className="receipt-title"
             >
@@ -222,13 +313,13 @@ const ReceiptEdit = () => {
                 mt: 0.5,
                 letterSpacing: 1,
                 fontSize: { xs: "4vw", sm: 18 },
-                textAlign: { xs: "left", sm: "center" },
+                textAlign: { xs: "center", sm: "center" },
               }}
               className="receipt-subtitle"
             >
               BR/LR Receiving Book
             </Typography>
-          </Box>
+          </Box> */}
         </Stack>
 
         <Box
@@ -248,14 +339,17 @@ const ReceiptEdit = () => {
           sx={{
             fontWeight: 500,
             fontSize: { xs: "4vw", sm: 16 },
-            flexDirection: { xs: "column", sm: "row" },
+            flexDirection: { xs: "row", sm: "row" },
             gap: { xs: 1, sm: 0 },
             mb: 1,
           }}
           className="receipt-row"
         >
           <Box>
-            Receipt No.: <Box component="span" sx={{ fontWeight: 700 }}>_</Box>
+            Receipt No.:{" "}
+            <Box component="span" sx={{ fontWeight: 700 }}>
+              _
+            </Box>
           </Box>
           <Box>
             Date.:{" "}
@@ -275,7 +369,7 @@ const ReceiptEdit = () => {
           <TextField
             inputRef={shopNameInputRef}
             value={shopname}
-            onChange={e => {
+            onChange={(e) => {
               setShopName(e.target.value);
               if (errorFields.shopname && e.target.value.trim() !== "") {
                 setErrorFields((prev) => ({ ...prev, shopname: false }));
@@ -303,7 +397,10 @@ const ReceiptEdit = () => {
         </Box>
 
         {/* Table or Card List */}
-        <Box className="receipt-table-wrapper" sx={{ overflowX: "auto", mt: 2 }}>
+        <Box
+          className="receipt-table-wrapper"
+          sx={{ overflowX: "auto", mt: 2 }}
+        >
           {!isMobile ? (
             <TableContainer component={Paper} elevation={0}>
               <Table
@@ -361,16 +458,24 @@ const ReceiptEdit = () => {
                             ) : (
                               <TextField
                                 value={row[header.key] ?? ""}
-                                onChange={e =>
-                                  handleCellChange(rowIdx, header.key, e.target.value)
+                                onChange={(e) =>
+                                  handleCellChange(
+                                    rowIdx,
+                                    header.key,
+                                    e.target.value
+                                  )
                                 }
                                 error={!!errorFields.rows[rowIdx]?.[header.key]}
                                 size="small"
                                 variant="standard"
-                                inputRef={el => registerInputRef(rowIdx, header.key, el)}
+                                inputRef={(el) =>
+                                  registerInputRef(rowIdx, header.key, el)
+                                }
                                 sx={{
                                   width: "100%",
-                                  background: errorFields.rows[rowIdx]?.[header.key]
+                                  background: errorFields.rows[rowIdx]?.[
+                                    header.key
+                                  ]
                                     ? "#fff0f0"
                                     : "transparent",
                                   "& .MuiInputBase-root:before": {
@@ -412,7 +517,11 @@ const ReceiptEdit = () => {
                     ))
                   ) : (
                     <TableRow>
-                      <TableCell colSpan={headers.length + 1} align="center" sx={{ p: 2, color: "#888" }}>
+                      <TableCell
+                        colSpan={headers.length + 1}
+                        align="center"
+                        sx={{ p: 2, color: "#888" }}
+                      >
                         No data available.
                       </TableCell>
                     </TableRow>
@@ -454,31 +563,42 @@ const ReceiptEdit = () => {
                         .filter((header) => header.key !== "S.No")
                         .map((header) => (
                           <Box key={header.key} mb={1}>
-                            <Typography fontWeight={600} fontSize={14} color="#555">
+                            <Typography
+                              fontWeight={600}
+                              fontSize={14}
+                              color="#555"
+                            >
                               {header.label}
                             </Typography>
                             <TextField
                               value={row[header.key] ?? ""}
-                              onChange={e =>
-                                handleCellChange(rowIdx, header.key, e.target.value)
+                              onChange={(e) =>
+                                handleCellChange(
+                                  rowIdx,
+                                  header.key,
+                                  e.target.value
+                                )
                               }
                               error={!!errorFields.rows[rowIdx]?.[header.key]}
                               size="small"
                               variant="outlined"
-                              inputRef={el => registerInputRef(rowIdx, header.key, el)}
+                              inputRef={(el) =>
+                                registerInputRef(rowIdx, header.key, el)
+                              }
                               sx={{
                                 width: "100%",
-                                background: errorFields.rows[rowIdx]?.[header.key]
+                                background: errorFields.rows[rowIdx]?.[
+                                  header.key
+                                ]
                                   ? "#fff0f0"
                                   : "#fff",
                                 mt: 0.5,
                                 "& .MuiOutlinedInput-root": {
                                   borderRadius: 1,
                                   fontSize: 15,
-                                  p: "4px 6px",
                                 },
                                 "& input": {
-                                  fontSize: 15,
+                                  fontSize: 17,
                                 },
                               }}
                             />
@@ -515,7 +635,7 @@ const ReceiptEdit = () => {
           </Button>
         </Stack> */}
       </Box>
-      <Stack direction="column" alignItems="center" spacing={2} mt={2}>
+      <Stack direction="column" alignItems="center" spacing={2} mt={2} px={.5}>
         <Button
           onClick={handleSave}
           variant="contained"
@@ -535,7 +655,7 @@ const ReceiptEdit = () => {
           Cancel
         </Button>
       </Stack>
-    </>
+    </div>
   );
 };
 
