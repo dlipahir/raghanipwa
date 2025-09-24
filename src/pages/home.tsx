@@ -1,13 +1,18 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import dayjs, { Dayjs } from "dayjs";
-import Asynchronous from "@/components/MultipeAutoComplete";
+import CustomerAutocomplete from "@/components/CustomerAutocomplete";
+import SellerAutocomplete from "@/components/SellerAutocomplete";
 import TileCard from "@/components/Card";
-import Input from "@mui/material/Input";
-import { InputAdornment } from "@mui/material";
-import AccountCircle from '@mui/icons-material/Search';
-import TextField from "@mui/material/TextField";
-import Button from "@mui/material/Button";
+import {
+  InputAdornment,
+  useMediaQuery,
+  Button,
+  TextField,
+} from "@mui/material";
+import AccountCircle from "@mui/icons-material/Search";
+import { getFilterCount } from "@/api/filter";
+
 
 const HomePage = () => {
   // Set default as today
@@ -15,40 +20,133 @@ const HomePage = () => {
     dayjs().subtract(1, "year")
   );
   const [toDate, setToDate] = React.useState<Dayjs | null>(dayjs());
+  const [sellerid, setSellerid] = useState();
+  const [customerid, setCustomerid] = useState();
+  // Use MUI's breakpoint for mobile
+  const isMobile = useMediaQuery("(max-width:600px)");
+
+  useEffect(() => {
+    console.log(
+      fromDate ? dayjs(fromDate).format("YYYY-MM-DD") : null,
+      toDate ? dayjs(toDate).format("YYYY-MM-DD") : null,
+      sellerid,
+      customerid
+    );
+    const fetchCount = async () => {
+      try {
+        const count = await getFilterCount({
+          bill_from: fromDate ? dayjs(fromDate).format("YYYY-MM-DD") : undefined,
+          bill_to: toDate ? dayjs(toDate).format("YYYY-MM-DD") : undefined,
+          customerid,
+          sellerid,
+        });
+        console.log("Filter count:", count);
+      } catch (e) {
+        console.error("Failed to fetch filter count", e);
+      }
+    };
+    fetchCount();
+
+  }, [fromDate, toDate, sellerid, customerid]);
 
   return (
-    <div style={{ padding: 40 }}>
-      <TextField
-        id="input-with-icon-textfield"
-        slotProps={{
-          input: {
-            startAdornment: (
-              <InputAdornment position="start">
-                <AccountCircle />
-              </InputAdornment>
-            ),
-          },
+    <div
+      style={{
+        padding: isMobile ? 12 : 40,
+        minHeight: "100vh",
+        boxSizing: "border-box",
+      }}
+    >
+      <div
+        style={{
+          display: "flex",
+          flexDirection: isMobile ? "column" : "row",
+          gap: isMobile ? 12 : 16,
+          alignItems: isMobile ? "stretch" : "center",
+          marginBottom: isMobile ? 16 : 24,
+          width: "100%",
         }}
-        variant="outlined"
-      />
-      <DatePicker
-        label="From Date"
-        value={fromDate}
-        onChange={(newValue) => setFromDate(newValue)}
-        format="DD-MM-YYYY"
-      />
-      <DatePicker
-        label="To Date"
-        value={toDate}
-        onChange={(newValue) => setToDate(newValue)}
-        format="DD-MM-YYYY"
-      />
-      <Asynchronous label1="Customer" />
-      <Asynchronous label1="Seller" />
-      <TileCard title="Invoices" data="129234" />
-      <TileCard title="Receipts" data="23532" />
-      <Button variant="contained">See Invoices</Button>
-      <Button variant="contained">See Receipts</Button>
+      >
+        <TextField
+          id="input-with-icon-textfield"
+          placeholder="Invoice / Receipt"
+          slotProps={{
+            input: {
+              startAdornment: (
+                <InputAdornment position="start">
+                  <AccountCircle />
+                </InputAdornment>
+              ),
+            },
+          }}
+          variant="outlined"
+          style={{ flex: 1, minWidth: isMobile ? 0 : 180 }}
+          fullWidth={isMobile}
+          size={isMobile ? "small" : "medium"}
+        />
+        <DatePicker
+          label="From Date"
+          value={fromDate}
+          onChange={(newValue) => setFromDate(newValue)}
+          format="DD-MM-YYYY"
+          slotProps={{
+            textField: {
+              size: isMobile ? "small" : "medium",
+              fullWidth: isMobile,
+              style: { minWidth: isMobile ? 0 : 140 },
+            },
+          }}
+        />
+        <DatePicker
+          label="To Date"
+          value={toDate}
+          onChange={(newValue) => setToDate(newValue)}
+          format="DD-MM-YYYY"
+          slotProps={{
+            textField: {
+              size: isMobile ? "small" : "medium",
+              fullWidth: isMobile,
+              style: { minWidth: isMobile ? 0 : 140 },
+            },
+          }}
+        />
+        <CustomerAutocomplete val={customerid} setval={setCustomerid} />
+        <SellerAutocomplete val={sellerid} setval={setSellerid} />
+      </div>
+      <div
+        style={{
+          display: "flex",
+          flexDirection: isMobile ? "column" : "row",
+          gap: isMobile ? 12 : 16,
+          marginBottom: isMobile ? 12 : 24,
+        }}
+      >
+        <TileCard title="Invoices" data="129234" />
+        <TileCard title="Receipts" data="23532" />
+      </div>
+      <div
+        style={{
+          display: "flex",
+          flexDirection: isMobile ? "column" : "row",
+          gap: isMobile ? 8 : 16,
+          width: isMobile ? "100%" : "auto",
+        }}
+      >
+        <Button
+          variant="contained"
+          fullWidth={isMobile}
+          size={isMobile ? "small" : "medium"}
+        >
+          See Invoices
+        </Button>
+        <Button
+          variant="contained"
+          fullWidth={isMobile}
+          size={isMobile ? "small" : "medium"}
+        >
+          See Receipts
+        </Button>
+      </div>
     </div>
   );
 };

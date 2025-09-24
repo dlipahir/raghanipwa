@@ -70,3 +70,9 @@ export const updateReceipt = async (id: string, data: any) => {
   const response = await axiosAuth.put(`/invoice/receipts/${id}`, data);
   return response.data;
 };
+
+export const updateReceiptCompleted = async (data) => {
+  const response = await axiosAuth.put(`/invoice/complete`, data);
+  return response.data;
+};
+

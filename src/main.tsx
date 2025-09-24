@@ -8,8 +8,8 @@ import "@fontsource/roboto/500.css";
 import "@fontsource/roboto/700.css";
 import { LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs'
-import { StyledEngineProvider } from '@mui/material/styles';
-import GlobalStyles from '@mui/material/GlobalStyles';
+import { ThemeProvider, createTheme } from '@mui/material/styles';
+import CssBaseline from '@mui/material/CssBaseline';
 
 // Register service worker for PWA
 if ("serviceWorker" in navigator) {
@@ -27,9 +27,11 @@ if ("serviceWorker" in navigator) {
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    
-   <LocalizationProvider dateAdapter={AdapterDayjs}>
-      <App />
-    </LocalizationProvider>
+    <ThemeProvider theme={createTheme({ palette: { mode: 'dark' } })}>
+      <CssBaseline />
+      <LocalizationProvider dateAdapter={AdapterDayjs}>
+        <App />
+      </LocalizationProvider>
+    </ThemeProvider>
   </StrictMode>
 );

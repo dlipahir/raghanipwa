@@ -1,4 +1,9 @@
-import { createRealReceipt, getSignedUrl, uploadPdfToSignedUrl } from "@/api/Invoice";
+import {
+  createRealReceipt,
+  getSignedUrl,
+  updateReceiptCompleted,
+  uploadPdfToSignedUrl,
+} from "@/api/Invoice";
 import ClientContactModal from "@/components/ClientContactModal";
 import { generatePdf } from "@/utils/generatePdf";
 import React, { useEffect, useState } from "react";
@@ -25,34 +30,55 @@ export default function ReceiptCompleted() {
     };
   }, [navigate]);
 
+  const handleInvoiceDataUpdate = async (real_receipt_id, data) => {
+    const shortdata = data.map((inv) => ({
+      _id:inv._id,
+      lr_date: inv.lr_date,
+      lr_no: inv.lr_no,
+      bill_date: inv.bill_date,
+      bill_no: inv.bill_no,
+      station: inv.station,
+      sellerid: inv?.seller?._id,
+      customerid: inv?.customer?._id,
+    }));
+
+    const updateddata = { real_receipt_id, shortdata };
+    console.log(updateddata);
+   await updateReceiptCompleted(updateddata)
+  };
+
   useEffect(() => {
     const renderPdf = async () => {
-        
-        try {
-          console.log("dataaa", receipt_id, shopname, data);
-          const { real_receipt_id } = await createRealReceipt(receipt_id, shopname, data);
-          setRealReceiptId(real_receipt_id);
-          const blob = await generatePdf(real_receipt_id, shopname, data, "blob");
-          const arrayBuffer = await (blob as Blob).arrayBuffer();
-          const pdf = await pdfjs.getDocument({ data: arrayBuffer }).promise;
-          const page = await pdf.getPage(1);
+      try {
+        console.log("dataaa", receipt_id, shopname, data);
+        const { real_receipt_id } = await createRealReceipt(
+          receipt_id,
+          shopname,
+          data
+        );
+        const blob = await generatePdf(real_receipt_id, shopname, data, "blob");
+        const arrayBuffer = await (blob as Blob).arrayBuffer();
+        const pdf = await pdfjs.getDocument({ data: arrayBuffer }).promise;
+        const page = await pdf.getPage(1);
 
-          const viewport = page.getViewport({ scale: 2 });
-          const canvas = document.createElement("canvas");
-          const context = canvas.getContext("2d");
-          if (!context) throw new Error("Failed to get canvas context");
-          canvas.width = viewport.width;
-          canvas.height = viewport.height;
+        const viewport = page.getViewport({ scale: 2 });
+        const canvas = document.createElement("canvas");
+        const context = canvas.getContext("2d");
+        if (!context) throw new Error("Failed to get canvas context");
+        canvas.width = viewport.width;
+        canvas.height = viewport.height;
 
-          await page.render({ canvasContext: context, viewport }).promise;
-          setImgSrc(canvas.toDataURL("image/png"));
+        await page.render({ canvasContext: context, viewport }).promise;
+        setRealReceiptId(real_receipt_id);
+        setImgSrc(canvas.toDataURL("image/png"));
 
-          const signedUrlsRes = await getSignedUrl(real_receipt_id);
-          const { url } = signedUrlsRes as any;
-          await uploadPdfToSignedUrl(url.url, blob as Blob);
-        } catch (error) {
-          console.error("Error rendering PDF or uploading:", error);
-        }
+        const signedUrlsRes = await getSignedUrl(real_receipt_id);
+        const { url } = signedUrlsRes as any;
+        await uploadPdfToSignedUrl(url.url, blob as Blob);
+        await handleInvoiceDataUpdate(real_receipt_id, data);
+      } catch (error) {
+        console.error("Error rendering PDF or uploading:", error);
+      }
     };
 
     renderPdf();
@@ -108,7 +134,11 @@ export default function ReceiptCompleted() {
                 <Box
                   component="img"
                   src="scan.svg"
-                  sx={{ width: 24, height: 24, filter: "invert(1) brightness(2)" }}
+                  sx={{
+                    width: 24,
+                    height: 24,
+                    filter: "invert(1) brightness(2)",
+                  }}
                   alt="Scan"
                 />
               }
@@ -133,7 +163,12 @@ export default function ReceiptCompleted() {
           />
         </>
       ) : (
-        <Box display="flex" alignItems="center" justifyContent="center" minHeight={200}>
+        <Box
+          display="flex"
+          alignItems="center"
+          justifyContent="center"
+          minHeight={200}
+        >
           <CircularProgress />
         </Box>
       )}

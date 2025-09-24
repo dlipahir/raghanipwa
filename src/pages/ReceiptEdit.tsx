@@ -100,7 +100,7 @@ const ReceiptEdit = () => {
     receiptData.map((row) => ({ ...row }))
   );
   const [shopname, setShopName] = useState(
-    receiptData?.[0]?.["shop_name"] || ""
+    data?.[0]?.["shop_name"] || ""
   );
 
   const [errorFields, setErrorFields] = useState<{
@@ -217,6 +217,34 @@ const ReceiptEdit = () => {
       replace: true,
     });
   };
+  const handleCreate = (_id,type,cdata) =>{
+  const updatedData = data.map((row) => {
+    if (row._id === _id) {
+      if (type === "customer") {
+        return {
+          ...row,
+          customer: cdata,
+          party_name:cdata.shop_name,
+          party_gst:cdata.gst_no,
+          party_state:cdata.state,
+          party_city:cdata.city
+        };
+      } else if (type === "seller") {
+        return {
+          ...row,
+          seller: cdata,
+          shop_name:cdata.shop_name,
+          shop_gst:cdata.gst_no,
+          shop_state:cdata.state,
+          shop_city:cdata.city
+        };
+      }
+    }
+    return row;
+  });
+  console.log("updated_data",updatedData)
+  setData(updatedData);
+  }
 
   const registerInputRef = (
     rowIdx: number,
@@ -235,30 +263,34 @@ const ReceiptEdit = () => {
             !row.customer && (
               <CustomerModal
                 key={`c${idx}`}
-                type="Customer"
+                type="customer"
                 Customerdata={{
                   shop_name: row.party_name,
                   city: row.party_city,
                   state: row.party_state,
                   gst_no: row.party_gst,
+                  _id:row._id
                 }}
+                handleCreate={handleCreate}
               />
             )
         )}
 
       {data.length > 0 &&
-        data.map(
+        [data[0]].map(
           (row, idx) =>
             !row.seller && (
               <CustomerModal
                 key={`s${idx}`}
-                type="Seller "
+                type="seller"
                 Customerdata={{
                   shop_name: row.shop_name,
                   city: row.shop_city,
                   state: row.shop_state,
                   gst_no: row.shop_gst,
+                  _id:row._id
                 }}
+                handleCreate={handleCreate}
               />
             )
         )}
@@ -268,7 +300,6 @@ const ReceiptEdit = () => {
           maxWidth: 900,
           mx: "auto",
           my: 4,
-          bgcolor: "#fff",
           border: "1px solid #eee",
           borderRadius: 2,
           boxShadow: 2,
@@ -366,7 +397,7 @@ const ReceiptEdit = () => {
         </Stack>
         <Box sx={{ fontSize: { xs: "3.5vw", sm: 15 }, mt: 0.5 }}>
           Received with thanks from M/s.&nbsp;
-          <TextField
+          {/* <TextField
             inputRef={shopNameInputRef}
             value={shopname}
             onChange={(e) => {
@@ -393,7 +424,20 @@ const ReceiptEdit = () => {
               },
             }}
             className="receipt-shopname-input"
-          />
+          /> */}
+                    <Typography
+                      sx={{
+                        fontWeight: 600,
+                        minWidth: { xs: "90vw", sm: 350 },
+                        maxWidth: { xs: "100vw", sm: 500 },
+                        fontSize: { xs: "4vw", sm: 15 },
+                        display: "inline-block",
+                        p: "2px 6px",
+                      }}
+                      className="receipt-shopname-typography"
+                    >
+                      {shopname}
+                    </Typography>
         </Box>
 
         {/* Table or Card List */}
@@ -422,7 +466,6 @@ const ReceiptEdit = () => {
                         align="center"
                         sx={{
                           fontWeight: 700,
-                          background: "#f5f5f5",
                           border: "1px solid #bbb",
                           minWidth: 80,
                           p: "8px 6px",
@@ -433,7 +476,6 @@ const ReceiptEdit = () => {
                     ))}
                     <TableCell
                       sx={{
-                        background: "#f5f5f5",
                         border: "1px solid #bbb",
                         width: 48,
                       }}
@@ -500,7 +542,6 @@ const ReceiptEdit = () => {
                           align="center"
                           sx={{
                             border: "1px solid #ccc",
-                            background: "#fafafa",
                             width: 48,
                           }}
                         >

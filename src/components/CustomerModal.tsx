@@ -16,9 +16,10 @@ import { createSeller } from "@/api/Seller";
 interface CustomerModalProps {
   type: String;
   Customerdata: any;
+  handleCreate:any;
 }
 
-const CustomerModal: React.FC<CustomerModalProps> = ({ type, Customerdata }) => {
+const CustomerModal: React.FC<CustomerModalProps> = ({ type, Customerdata,handleCreate }) => {
   const [open, setOpen] = useState(true);
   const [customerName, setCustomerName] = useState(Customerdata?.shop_name);
   const [city, setCity] = useState(Customerdata?.city);
@@ -44,16 +45,18 @@ const CustomerModal: React.FC<CustomerModalProps> = ({ type, Customerdata }) => 
     setLoading(true);
     setError(null);
     try {
-      const customerData = {
+      const updatedcustomerData = {
         shop_name: customerName,
         city,
         state,
         gst_no: gstNo,
       };
-      if (type === "Customer") {
-        await createCustomer(customerData);
+      if (type === "customer") {
+        const data =  await createCustomer(updatedcustomerData);
+        handleCreate(Customerdata._id,'customer',data)
       } else {
-        await createSeller(customerData);
+        const data = await createSeller(updatedcustomerData);
+        handleCreate(Customerdata._id,'seller',data)
       }
       setCustomerName("");
       setCity("");
