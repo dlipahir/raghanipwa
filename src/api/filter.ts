@@ -13,6 +13,10 @@ export const getCustomers = async () => {
   return response.data;
 };
 
+export const getCustomerSellerCounts = async () => {
+  const response = await axiosAuth.get('filter/scounts');
+  return response.data;
+};
 
 export const getFilterCount = async ({
   bill_from,

@@ -11,10 +11,12 @@ import {
   TextField,
 } from "@mui/material";
 import AccountCircle from "@mui/icons-material/Search";
-import { getFilterCount } from "@/api/filter";
+import { getCustomerSellerCounts, getFilterCount } from "@/api/filter";
+import { useNavigate } from "react-router-dom";
 
 
 const HomePage = () => {
+  const navigate = useNavigate()
   // Set default as today
   const [fromDate, setFromDate] = React.useState<Dayjs | null>(
     dayjs().subtract(1, "year")
@@ -22,25 +24,22 @@ const HomePage = () => {
   const [toDate, setToDate] = React.useState<Dayjs | null>(dayjs());
   const [sellerid, setSellerid] = useState();
   const [customerid, setCustomerid] = useState();
+  const [icounts, setIcounts] = useState({receiptcounts: 0, invoicecounts: 0})
+  const[scounts,setScounts] = useState({sellerCount: 5, customerCount: 4})
   // Use MUI's breakpoint for mobile
   const isMobile = useMediaQuery("(max-width:600px)");
 
   useEffect(() => {
-    console.log(
-      fromDate ? dayjs(fromDate).format("YYYY-MM-DD") : null,
-      toDate ? dayjs(toDate).format("YYYY-MM-DD") : null,
-      sellerid,
-      customerid
-    );
+
     const fetchCount = async () => {
       try {
         const count = await getFilterCount({
-          bill_from: fromDate ? dayjs(fromDate).format("YYYY-MM-DD") : undefined,
-          bill_to: toDate ? dayjs(toDate).format("YYYY-MM-DD") : undefined,
-          customerid,
-          sellerid,
-        });
-        console.log("Filter count:", count);
+            bill_from: fromDate ? dayjs(fromDate).format("YYYY-MM-DD") : undefined,
+            bill_to: toDate ? dayjs(toDate).format("YYYY-MM-DD") : undefined,
+            customerid: customerid?._id,
+            sellerid: sellerid?._id,
+          })
+        setIcounts(count);
       } catch (e) {
         console.error("Failed to fetch filter count", e);
       }
@@ -48,6 +47,20 @@ const HomePage = () => {
     fetchCount();
 
   }, [fromDate, toDate, sellerid, customerid]);
+
+  useEffect(() => {
+
+    const fetchCount = async () => {
+      try {
+        const scounts = await getCustomerSellerCounts()
+        setScounts(scounts);
+      } catch (e) {
+        console.error("Failed to fetch filter count", e);
+      }
+    };
+    fetchCount();
+
+  }, []);
 
   return (
     <div
@@ -82,7 +95,7 @@ const HomePage = () => {
           variant="outlined"
           style={{ flex: 1, minWidth: isMobile ? 0 : 180 }}
           fullWidth={isMobile}
-          size={isMobile ? "small" : "medium"}
+          size={isMobile ? "medium" : "medium"}
         />
         <DatePicker
           label="From Date"
@@ -91,7 +104,7 @@ const HomePage = () => {
           format="DD-MM-YYYY"
           slotProps={{
             textField: {
-              size: isMobile ? "small" : "medium",
+              size: isMobile ? "medium" : "medium",
               fullWidth: isMobile,
               style: { minWidth: isMobile ? 0 : 140 },
             },
@@ -104,7 +117,7 @@ const HomePage = () => {
           format="DD-MM-YYYY"
           slotProps={{
             textField: {
-              size: isMobile ? "small" : "medium",
+              size: isMobile ? "medium" : "medium",
               fullWidth: isMobile,
               style: { minWidth: isMobile ? 0 : 140 },
             },
@@ -121,8 +134,22 @@ const HomePage = () => {
           marginBottom: isMobile ? 12 : 24,
         }}
       >
-        <TileCard title="Invoices" data="129234" />
-        <TileCard title="Receipts" data="23532" />
+        <TileCard
+          title="Invoices"
+          data={icounts?.invoicecounts}
+          onClick={() => {
+            navigate("/invoices")
+          }}
+        />
+        <TileCard title="Receipts" data={icounts?.receiptcounts}    onClick={() => {
+            navigate("/receipts")
+          }}/>
+        <TileCard title="Customer" data={scounts?.customerCount}    onClick={() => {
+            navigate("/customers")
+          }}/>
+        <TileCard title="Seller" data={scounts?.sellerCount}    onClick={() => {
+            navigate("/sellers")
+          }}/>
       </div>
       <div
         style={{
@@ -132,20 +159,7 @@ const HomePage = () => {
           width: isMobile ? "100%" : "auto",
         }}
       >
-        <Button
-          variant="contained"
-          fullWidth={isMobile}
-          size={isMobile ? "small" : "medium"}
-        >
-          See Invoices
-        </Button>
-        <Button
-          variant="contained"
-          fullWidth={isMobile}
-          size={isMobile ? "small" : "medium"}
-        >
-          See Receipts
-        </Button>
+
       </div>
     </div>
   );

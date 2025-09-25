@@ -5,17 +5,24 @@ import CssBaseline from '@mui/material/CssBaseline';
 import Divider from '@mui/material/Divider';
 import Drawer from '@mui/material/Drawer';
 import IconButton from '@mui/material/IconButton';
-import InboxIcon from '@mui/icons-material/MoveToInbox';
 import List from '@mui/material/List';
 import ListItem from '@mui/material/ListItem';
 import ListItemButton from '@mui/material/ListItemButton';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
-import MailIcon from '@mui/icons-material/Mail';
 import MenuIcon from '@mui/icons-material/Menu';
 import Toolbar from '@mui/material/Toolbar';
 import Typography from '@mui/material/Typography';
 import { useNavigate } from 'react-router-dom';
+
+// Import icons for each route
+import HomeIcon from '@mui/icons-material/Home';
+import DocumentScannerIcon from '@mui/icons-material/DocumentScanner';
+import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
+import DescriptionIcon from '@mui/icons-material/Description';
+import PeopleIcon from '@mui/icons-material/People';
+import StoreIcon from '@mui/icons-material/Store';
+import PersonIcon from '@mui/icons-material/Person';
 
 const drawerWidth = 240;
 
@@ -46,15 +53,36 @@ export default function ResponsiveDrawer(props: Props) {
     }
   };
 
+  // Define navigation items with their icons
+  const mainNavs = [
+    { text: 'Home', path: '/', icon: <HomeIcon /> },
+    { text: 'Scan', path: '/scan', icon: <DocumentScannerIcon /> },
+  ];
+
+  const secondaryNavs = [
+    { text: 'Invoice', path: '/invoices', icon: <DescriptionIcon /> },
+    { text: 'Receipt', path: '/receipts', icon: <ReceiptLongIcon /> },
+    { text: 'Customer', path: '/customers', icon: <PeopleIcon /> },
+    { text: 'Seller', path: '/sellers', icon: <StoreIcon /> },
+    { text: 'User', path: '/users', icon: <PersonIcon /> },
+  ];
+
+  // Helper to handle nav click and close drawer on mobile
+  const handleNavClick = (path: string) => {
+    navigate(path);
+    // Only close the drawer if on mobile (xs)
+    setMobileOpen(false);
+  };
+
   const drawer = (
     <div>
       <Divider />
       <List>
-        {[{text:'Login',path:'/login'}, {text:'Home',path:'/'}, {text:'SCan',path:'/scan'}, {text:'Drafts',path:'/drafts'}].map((nav, index) => (
-          <ListItem key={nav.text} disablePadding onClick ={()=>{navigate(nav.path)}}>
-            <ListItemButton >
+        {mainNavs.map((nav) => (
+          <ListItem key={nav.text} disablePadding>
+            <ListItemButton onClick={() => handleNavClick(nav.path)}>
               <ListItemIcon>
-                {index % 2 === 0 ? <InboxIcon /> : <MailIcon />}
+                {nav.icon}
               </ListItemIcon>
               <ListItemText primary={nav.text} />
             </ListItemButton>
@@ -63,13 +91,13 @@ export default function ResponsiveDrawer(props: Props) {
       </List>
       <Divider />
       <List>
-        {['All mail', 'Trash', 'Spam'].map((text, index) => (
-          <ListItem key={text} disablePadding>
-            <ListItemButton>
+        {secondaryNavs.map((nav) => (
+          <ListItem key={nav.text} disablePadding>
+            <ListItemButton onClick={() => handleNavClick(nav.path)}>
               <ListItemIcon>
-                {index % 2 === 0 ? <InboxIcon /> : <MailIcon />}
+                {nav.icon}
               </ListItemIcon>
-              <ListItemText primary={text} />
+              <ListItemText primary={nav.text} />
             </ListItemButton>
           </ListItem>
         ))}

@@ -6,7 +6,7 @@ import CardActionArea from '@mui/material/CardActionArea';
 
 // need to add skelaton
 
-function TileCard({title="",data=""}) {
+function TileCard({title="",data="",onClick=()=>{}}) {
 
   return (
     <Box
@@ -16,6 +16,7 @@ function TileCard({title="",data=""}) {
         gridTemplateColumns: 'repeat(auto-fill, minmax(min(300px, 100%), 1fr))',
         gap: 2,
       }}
+      onClick={onClick}
     >
 
         <Card>

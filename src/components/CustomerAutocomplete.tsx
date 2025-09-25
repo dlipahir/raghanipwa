@@ -45,7 +45,6 @@ export default function CustomerAutocomplete({ val, setval }: CustomerAutocomple
 
   return (
     <Autocomplete
-      sx={{ width: 300 }}
       open={open}
       onOpen={handleOpen}
       onClose={handleClose}

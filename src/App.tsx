@@ -10,6 +10,11 @@ import ReceiptProgress from './pages/ReceiptProgress'
 import ReceiptEdit from './pages/ReceiptEdit'
 import ReceiptDetails from './pages/ReceiptDetails'
 import ReceiptCompleted from './pages/ReceiptCompleted'
+import InvoiceList from './pages/Invoices'
+import ReceiptsTable from './pages/Receipts'
+import Users from './pages/Users'
+import SellerPage from './pages/Seller'
+import CustomerPage from './pages/Customer'
 
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -39,52 +44,113 @@ function App() {
             <Route 
               path="/" 
               element={
+                <ProtectedRoute>
                   <ResponsiveDrawer heading="Home Page">
                     <HomePage />
                   </ResponsiveDrawer>
+                </ProtectedRoute>
               } 
             />
             <Route 
               path="/scan" 
               element={
-                  <ResponsiveDrawer heading="Home Page">
+                <ProtectedRoute>
+                  <ResponsiveDrawer heading="Scan">
                     <ScannerPage />
                   </ResponsiveDrawer>
+                </ProtectedRoute>
               } 
             />
             <Route 
               path="/receipt-edit" 
               element={
-                  <ResponsiveDrawer heading="Home Page">
+                <ProtectedRoute>
+                  <ResponsiveDrawer heading="Edit Receipt">
                     <ReceiptEdit />
                   </ResponsiveDrawer>
+                </ProtectedRoute>
               } 
             />
             <Route 
               path="/receipt-progress" 
               element={
-                  <ResponsiveDrawer heading="Home Page">
+                <ProtectedRoute>
+                  <ResponsiveDrawer heading="Receipt Progress">
                     <ReceiptProgress />
                   </ResponsiveDrawer>
+                </ProtectedRoute>
               } 
             />
             <Route 
               path="/receipt-details" 
               element={
-                  <ResponsiveDrawer heading="Home Page">
+                <ProtectedRoute>
+                  <ResponsiveDrawer heading="Receipt Details">
                     <ReceiptDetails />
                   </ResponsiveDrawer>
+                </ProtectedRoute>
               } 
             />
             <Route 
               path="/receipt-completed" 
               element={
-                  <ResponsiveDrawer heading="Home Page">
+                <ProtectedRoute>
+                  <ResponsiveDrawer heading="Receipt Completed">
                     <ReceiptCompleted />
                   </ResponsiveDrawer>
+                </ProtectedRoute>
               } 
             />
-    
+            <Route 
+              path="/invoices" 
+              element={
+                <ProtectedRoute>
+                  <ResponsiveDrawer heading="Invoices">
+                    <InvoiceList />
+                  </ResponsiveDrawer>
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/receipts" 
+              element={
+                <ProtectedRoute>
+                  <ResponsiveDrawer heading="Receipts">
+                    <ReceiptsTable />
+                  </ResponsiveDrawer>
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/users" 
+              element={
+                <ProtectedRoute>
+                  <ResponsiveDrawer heading="Users">
+                    <Users />
+                  </ResponsiveDrawer>
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/sellers" 
+              element={
+                <ProtectedRoute>
+                  <ResponsiveDrawer heading="Sellers">
+                    <SellerPage />
+                  </ResponsiveDrawer>
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/customers" 
+              element={
+                <ProtectedRoute>
+                  <ResponsiveDrawer heading="Customers">
+                    <CustomerPage />
+                  </ResponsiveDrawer>
+                </ProtectedRoute>
+              } 
+            />
             {/* <Route path="/" element={<Navigate to="/login" replace />} /> */}
           </Routes>
         </div>

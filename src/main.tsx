@@ -27,11 +27,11 @@ if ("serviceWorker" in navigator) {
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    <ThemeProvider theme={createTheme({ palette: { mode: 'dark' } })}>
-      <CssBaseline />
+    {/* <ThemeProvider theme={createTheme({ palette: { mode: 'dark' } })}>
+      <CssBaseline /> */}
       <LocalizationProvider dateAdapter={AdapterDayjs}>
         <App />
       </LocalizationProvider>
-    </ThemeProvider>
+    {/* </ThemeProvider> */}
   </StrictMode>
 );
