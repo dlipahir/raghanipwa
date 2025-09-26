@@ -11,11 +11,11 @@ export default defineConfig({
       devOptions: {
         enabled: true
       },
-      includeAssets: ['favicon.ico', 'apple-touch-icon.svg', 'masked-icon.svg'],
+      includeAssets: ['favicon.ico', 'raghaninew.jpg', 'RLION.jpg', 'masked-icon.svg'],
       manifest: {
-        name: 'WC Pathsala Mobile',
-        short_name: 'WC Pathsala',
-        description: 'WC Pathsala Mobile App - Attendance Management',
+        name: 'Raghani',
+        short_name: 'Raghani',
+        description: 'Raghani invoice Mobile App - Invoice Management',
         theme_color: '#007AFF',
         background_color: '#ffffff',
         display: 'standalone',
@@ -24,14 +24,14 @@ export default defineConfig({
         start_url: '/',
         icons: [
           {
-            src: 'pwa-192x192.svg',
+            src: 'raghaninew.jpg',
             sizes: '192x192',
-            type: 'image/svg+xml'
+            type: 'image/jpeg'
           },
           {
-            src: 'pwa-512x512.svg',
+            src: 'raghaninew.jpg',
             sizes: '512x512',
-            type: 'image/svg+xml'
+            type: 'image/jpeg'
           }
         ]
       },

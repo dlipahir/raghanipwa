@@ -142,7 +142,7 @@ export default function ReceiptCompleted() {
                   alt="Scan"
                 />
               }
-              onClick={() => navigate("/crop1")}
+              onClick={() => navigate("/scan")}
             >
               Scan Invoice
             </Button>
