@@ -23,6 +23,9 @@ import DescriptionIcon from '@mui/icons-material/Description';
 import PeopleIcon from '@mui/icons-material/People';
 import StoreIcon from '@mui/icons-material/Store';
 import PersonIcon from '@mui/icons-material/Person';
+import LogoutIcon from '@mui/icons-material/Logout';
+
+import { useAuth } from '@/contexts/AuthContext';
 
 const drawerWidth = 240;
 
@@ -33,10 +36,11 @@ interface Props {
 }
 
 export default function ResponsiveDrawer(props: Props) {
-  const { window, children ,heading} = props;
+  const { window, children, heading } = props;
   const [mobileOpen, setMobileOpen] = React.useState(false);
   const [isClosing, setIsClosing] = React.useState(false);
-  const navigate = useNavigate()
+  const navigate = useNavigate();
+  const { logout, userData } = useAuth();
 
   const handleDrawerClose = () => {
     setIsClosing(true);
@@ -59,12 +63,15 @@ export default function ResponsiveDrawer(props: Props) {
     { text: 'Scan', path: '/scan', icon: <DocumentScannerIcon /> },
   ];
 
+  // Only show "User" to admin role
+  const isAdmin = userData && (userData.role === 'ADMIN' || userData.role === 'Admin');
+
   const secondaryNavs = [
     { text: 'Invoice', path: '/invoices', icon: <DescriptionIcon /> },
     { text: 'Receipt', path: '/receipts', icon: <ReceiptLongIcon /> },
     { text: 'Customer', path: '/customers', icon: <PeopleIcon /> },
     { text: 'Seller', path: '/sellers', icon: <StoreIcon /> },
-    { text: 'User', path: '/users', icon: <PersonIcon /> },
+    ...(isAdmin ? [{ text: 'User', path: '/users', icon: <PersonIcon /> }] : []),
   ];
 
   // Helper to handle nav click and close drawer on mobile
@@ -74,35 +81,56 @@ export default function ResponsiveDrawer(props: Props) {
     setMobileOpen(false);
   };
 
+  // Drawer content with logout button at the bottom
   const drawer = (
-    <div>
-      <Divider />
-      <List>
-        {mainNavs.map((nav) => (
-          <ListItem key={nav.text} disablePadding>
-            <ListItemButton onClick={() => handleNavClick(nav.path)}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+      <Box>
+        <Divider />
+        <List>
+          {mainNavs.map((nav) => (
+            <ListItem key={nav.text} disablePadding>
+              <ListItemButton onClick={() => handleNavClick(nav.path)}>
+                <ListItemIcon>
+                  {nav.icon}
+                </ListItemIcon>
+                <ListItemText primary={nav.text} />
+              </ListItemButton>
+            </ListItem>
+          ))}
+        </List>
+        <Divider />
+        <List>
+          {secondaryNavs.map((nav) => (
+            <ListItem key={nav.text} disablePadding>
+              <ListItemButton onClick={() => handleNavClick(nav.path)}>
+                <ListItemIcon>
+                  {nav.icon}
+                </ListItemIcon>
+                <ListItemText primary={nav.text} />
+              </ListItemButton>
+            </ListItem>
+          ))}
+        </List>
+      </Box>
+      <Box sx={{ flexGrow: 1 }} />
+      <Box sx={{ p: 1 }}>
+        <Divider />
+        <List>
+          <ListItem disablePadding>
+            <ListItemButton
+              onClick={() => {
+                logout();
+              }}
+            >
               <ListItemIcon>
-                {nav.icon}
+                <LogoutIcon />
               </ListItemIcon>
-              <ListItemText primary={nav.text} />
+              <ListItemText primary="Logout" />
             </ListItemButton>
           </ListItem>
-        ))}
-      </List>
-      <Divider />
-      <List>
-        {secondaryNavs.map((nav) => (
-          <ListItem key={nav.text} disablePadding>
-            <ListItemButton onClick={() => handleNavClick(nav.path)}>
-              <ListItemIcon>
-                {nav.icon}
-              </ListItemIcon>
-              <ListItemText primary={nav.text} />
-            </ListItemButton>
-          </ListItem>
-        ))}
-      </List>
-    </div>
+        </List>
+      </Box>
+    </Box>
   );
 
   const container = window !== undefined ? () => window().document.body : undefined;
@@ -170,7 +198,6 @@ export default function ResponsiveDrawer(props: Props) {
         component="main"
         sx={{
           flexGrow: 1,
-          
           width: { sm: `calc(100% - ${drawerWidth}px)` },
           height: '100vh',
           minHeight: 0,
