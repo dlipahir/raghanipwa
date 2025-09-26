@@ -94,7 +94,7 @@ const CustomerModal: React.FC<CustomerModalProps> = ({ type, Customerdata,handle
         <DialogContent>
           <Box sx={{ mt: 1 }}>
             <TextField
-              label="Customer Name"
+              label={`${type} Name`}
               value={customerName}
               onChange={(e) => setCustomerName(e.target.value)}
               fullWidth
