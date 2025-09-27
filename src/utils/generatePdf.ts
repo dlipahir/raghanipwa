@@ -83,7 +83,7 @@ export const generatePdf = (receipt_id,shop_name, receiptData,opt) => {
             style: "normal",
           },
           {
-            text: `Date: ${new Date().toLocaleDateString()}`,
+            text: `Date: ${(() => { const d = new Date(); return `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth()+1).padStart(2, '0')}/${d.getFullYear()}`; })()}`,
             style: "normal",
             alignment: "right",
           },
