@@ -23,18 +23,23 @@ export const getFilterCount = async ({
   bill_to,
   customerid,
   sellerid,
+  created_from,
+  created_to,
 }: {
   bill_from?: string;
   bill_to?: string;
   customerid?: string;
   sellerid?: string;
+  created_from?: string;
+  created_to?: string;
 }) => {
   const params: any = {};
   if (bill_from) params.bill_from = bill_from;
   if (bill_to) params.bill_to = bill_to;
   if (customerid) params.customerid = customerid;
   if (sellerid) params.sellerid = sellerid;
-
+  if (created_from) params.created_from = created_from;
+  if (created_to) params.created_to = created_to;
   const response = await axiosAuth.get('filter/count', { params });
   return response.data;
 };

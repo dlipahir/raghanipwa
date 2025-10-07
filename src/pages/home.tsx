@@ -9,6 +9,9 @@ import {
   useMediaQuery,
   Button,
   TextField,
+  MenuItem,
+  InputLabel,
+  Select,
 } from "@mui/material";
 import AccountCircle from "@mui/icons-material/Search";
 import { getCustomerSellerCounts, getFilterCount } from "@/api/filter";
@@ -26,19 +29,31 @@ const HomePage = () => {
   const [customerid, setCustomerid] = useState();
   const [icounts, setIcounts] = useState({receiptcounts: 0, invoicecounts: 0})
   const[scounts,setScounts] = useState({sellerCount: 5, customerCount: 4})
+  const[billType,setBillType] = useState()
+  
   // Use MUI's breakpoint for mobile
   const isMobile = useMediaQuery("(max-width:600px)");
 
   useEffect(() => {
 
     const fetchCount = async () => {
+      console.log(billType)
       try {
         const count = await getFilterCount({
-            bill_from: fromDate ? dayjs(fromDate).format("YYYY-MM-DD") : undefined,
-            bill_to: toDate ? dayjs(toDate).format("YYYY-MM-DD") : undefined,
-            customerid: customerid?._id,
-            sellerid: sellerid?._id,
-          })
+          ...(billType === "invoice"
+            ? {
+                bill_from: fromDate ? dayjs(fromDate).format("YYYY-MM-DD") : undefined,
+                bill_to: toDate ? dayjs(toDate).format("YYYY-MM-DD") : undefined,
+              }
+            : billType === "receipt"
+            ? {
+                created_from: fromDate ? dayjs(fromDate).format("YYYY-MM-DD") : undefined,
+                created_to: toDate ? dayjs(toDate).format("YYYY-MM-DD") : undefined,
+              }
+            : {}),
+          customerid: customerid?._id,
+          sellerid: sellerid?._id,
+        })
         setIcounts(count);
       } catch (e) {
         console.error("Failed to fetch filter count", e);
@@ -46,7 +61,7 @@ const HomePage = () => {
     };
     fetchCount();
 
-  }, [fromDate, toDate, sellerid, customerid]);
+  }, [fromDate, toDate, sellerid, customerid, billType]);
 
   useEffect(() => {
 
@@ -97,6 +112,18 @@ const HomePage = () => {
           fullWidth={isMobile}
           size={isMobile ? "medium" : "medium"}
         />
+        
+                <Select
+                  labelId="bill-type-label"
+                  id="bill-type-select"
+                  value={billType || ""}
+                  onChange={(e) => setBillType(e.target.value)}
+                  sx={{ m: 1, minWidth: 120 }}
+                >
+                  <MenuItem value="invoice">Invoice Date</MenuItem>
+                  <MenuItem value="receipt">Receipt Date</MenuItem>
+                </Select>
+
         <DatePicker
           label="From Date"
           value={fromDate}
@@ -144,10 +171,10 @@ const HomePage = () => {
         <TileCard title="Receipts" data={icounts?.receiptcounts}    onClick={() => {
             navigate("/receipts")
           }}/>
-        <TileCard title="Customer" data={scounts?.customerCount}    onClick={() => {
+        <TileCard title="Total Customer" data={scounts?.customerCount}    onClick={() => {
             navigate("/customers")
           }}/>
-        <TileCard title="Seller" data={scounts?.sellerCount}    onClick={() => {
+        <TileCard title=" Total Seller" data={scounts?.sellerCount}    onClick={() => {
             navigate("/sellers")
           }}/>
       </div>
