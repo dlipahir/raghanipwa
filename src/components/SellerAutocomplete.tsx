@@ -5,7 +5,7 @@ import CircularProgress from "@mui/material/CircularProgress";
 import { getSellers } from "@/api/filter";
 
 // Add a type for the customer option
-interface CustomerOption {
+interface SellerOption {
   _id: string;
   shop_name: string;
   gst_no?: string;
@@ -13,34 +13,34 @@ interface CustomerOption {
   state?: string;
 }
 
-interface CustomerAutocompleteProps {
-  val: CustomerOption | null;
-  setval: (value: CustomerOption | null) => void;
+interface SellerAutocompleteProps {
+  val: SellerOption[] | null | undefined;
+    setval: (value: SellerOption | null) => void;
 }
 
-export default function CustomerAutocomplete({ val, setval }: CustomerAutocompleteProps) {
+export default function SellerAutocomplete({ val, setval,label=true }: SellerAutocompleteProps) {
   const [open, setOpen] = React.useState(false);
-  const [options, setOptions] = React.useState<CustomerOption[]>([]);
+  const [sellers, setSellers] = React.useState<SellerOption[] | null | undefined>([]);
   const [loading, setLoading] = React.useState(false);
 
   const handleOpen = () => {
     setOpen(true);
     (async () => {
       setLoading(true);
-      let customers: CustomerOption[] = [];
+      let sellers: SellerOption[] = [];
       try {
-        customers = await getSellers();
+        sellers = await getSellers();
       } catch (e) {
-        customers = [];
+        sellers = [];
       }
-      setOptions(customers);
+      setSellers(sellers);
       setLoading(false);
     })();
   };
 
   const handleClose = () => {
     setOpen(false);
-    setOptions([]);
+    setSellers([]);
   };
 
   return (
@@ -50,7 +50,7 @@ export default function CustomerAutocomplete({ val, setval }: CustomerAutocomple
       onClose={handleClose}
       isOptionEqualToValue={(option, value) => option?._id === value?._id}
       getOptionLabel={(option) => option?.shop_name || ""}
-      options={options}
+      options={sellers || []}
       value={val}
       onChange={(_event, newValue) => {
         setval(newValue);
@@ -73,7 +73,7 @@ export default function CustomerAutocomplete({ val, setval }: CustomerAutocomple
       renderInput={(params) => (
         <TextField
           {...params}
-          label="Seller"
+          label={label ? "Seller" : ""}
           InputProps={{
             ...params.InputProps,
             endAdornment: (

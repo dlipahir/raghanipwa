@@ -18,7 +18,7 @@ interface CustomerAutocompleteProps {
   setval: (value: CustomerOption | null) => void;
 }
 
-export default function CustomerAutocomplete({ val, setval }: CustomerAutocompleteProps) {
+export default function CustomerAutocomplete({ val, setval,label=true }: CustomerAutocompleteProps) {
   const [open, setOpen] = React.useState(false);
   const [options, setOptions] = React.useState<CustomerOption[]>([]);
   const [loading, setLoading] = React.useState(false);
@@ -73,7 +73,7 @@ export default function CustomerAutocomplete({ val, setval }: CustomerAutocomple
       renderInput={(params) => (
         <TextField
           {...params}
-          label="Customer"
+          label={label ? "Customer" : ""}
           InputProps={{
             ...params.InputProps,
             endAdornment: (

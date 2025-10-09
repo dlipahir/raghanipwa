@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import {
   Box,
@@ -23,6 +23,8 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import AddIcon from "@mui/icons-material/Add";
 import { useTheme } from "@mui/material/styles";
 import CustomerModal from "@/components/CustomerModal";
+import CustomerAutocomplete from "@/components/CustomerAutocomplete";
+import SellerAutocomplete from "@/components/SellerAutocomplete";
 
 interface ReceiptDataItem {
   [key: string]: any;
@@ -102,6 +104,12 @@ const ReceiptEdit = () => {
   const [shopname, setShopName] = useState(
     data?.[0]?.["shop_name"] || ""
   );
+  const [seller, setSeller] = useState(
+   data?.[0]?.["seller"] || null
+  );
+
+  console.log("seller",seller)
+  console.log("data",data)
 
   const [errorFields, setErrorFields] = useState<{
     shopname: boolean;
@@ -218,6 +226,11 @@ const ReceiptEdit = () => {
     });
   };
   const handleCreate = (_id,type,cdata) =>{
+    if(type === "seller"){
+      // handleSellerChange(cdata);
+      setSeller(cdata);
+      return;
+    }
   const updatedData = data.map((row) => {
     if (row._id === _id) {
       if (type === "customer") {
@@ -238,6 +251,7 @@ const ReceiptEdit = () => {
           shop_state:cdata.state,
           shop_city:cdata.city
         };
+        setSeller(cdata);
       }
     }
     return row;
@@ -245,6 +259,46 @@ const ReceiptEdit = () => {
   console.log("updated_data",updatedData)
   setData(updatedData);
   }
+
+  const handleSellerChange = (value: any | null) => {
+
+  // Update the seller for each row in data to the new value
+  // setSeller(value);
+  setData((prevData) =>
+    prevData.map((row) => ({
+      ...row,
+      seller: value,
+      shop_name: value?.shop_name || "",
+      shop_gst: value?.gst_no || "",
+      shop_state: value?.state || "",
+      shop_city: value?.city || "",
+    }))
+  );
+  };
+
+  useEffect(() => {
+    if (seller !== undefined) {
+      handleSellerChange(seller);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [seller]);
+
+  const handleCustomerChange = (value: any | null,_id) => {
+    setData((prevData) =>
+      prevData.map((row) =>
+        row._id === _id
+          ? {
+              ...row,
+              customer: value,
+              party_name: value?.shop_name || "",
+              party_gst: value?.gst_no || "",
+              party_state: value?.state || "",
+              party_city: value?.city || "",
+            }
+          : row
+      )
+    );
+  };
 
   const registerInputRef = (
     rowIdx: number,
@@ -425,7 +479,7 @@ const ReceiptEdit = () => {
             }}
             className="receipt-shopname-input"
           /> */}
-                    <Typography
+                    {/* <Typography
                       sx={{
                         fontWeight: 600,
                         minWidth: { xs: "90vw", sm: 350 },
@@ -437,7 +491,8 @@ const ReceiptEdit = () => {
                       className="receipt-shopname-typography"
                     >
                       {shopname}
-                    </Typography>
+                    </Typography> */}
+                    <SellerAutocomplete val={seller} setval={setSeller} label={false}/>
         </Box>
 
         {/* Table or Card List */}
@@ -498,6 +553,9 @@ const ReceiptEdit = () => {
                             {header.key === "S.No" ? (
                               rowIdx + 1
                             ) : (
+                              header.key === "party_name" ? (
+                                <CustomerAutocomplete val={row['customer']} setval={(data) => handleCustomerChange(data,row._id)} label={false} />
+                              ) : (
                               <TextField
                                 value={row[header.key] ?? ""}
                                 onChange={(e) =>
@@ -535,6 +593,7 @@ const ReceiptEdit = () => {
                                   disableUnderline: true,
                                 }}
                               />
+                              )
                             )}
                           </TableCell>
                         ))}
@@ -611,38 +670,46 @@ const ReceiptEdit = () => {
                             >
                               {header.label}
                             </Typography>
-                            <TextField
-                              value={row[header.key] ?? ""}
-                              onChange={(e) =>
-                                handleCellChange(
-                                  rowIdx,
-                                  header.key,
-                                  e.target.value
-                                )
-                              }
-                              error={!!errorFields.rows[rowIdx]?.[header.key]}
-                              size="small"
-                              variant="outlined"
-                              inputRef={(el) =>
-                                registerInputRef(rowIdx, header.key, el)
-                              }
-                              sx={{
-                                width: "100%",
-                                background: errorFields.rows[rowIdx]?.[
-                                  header.key
-                                ]
-                                  ? "#fff0f0"
-                                  : "#fff",
-                                mt: 0.5,
-                                "& .MuiOutlinedInput-root": {
-                                  borderRadius: 1,
-                                  fontSize: 15,
-                                },
-                                "& input": {
-                                  fontSize: 17,
-                                },
-                              }}
-                            />
+                            {header.key === "party_name" ? (
+                              <CustomerAutocomplete
+                                val={row["customer"]}
+                                setval={(data) => handleCustomerChange(data, row._id)}
+                                label={false}
+                              />
+                            ) : (
+                              <TextField
+                                value={row[header.key] ?? ""}
+                                onChange={(e) =>
+                                  handleCellChange(
+                                    rowIdx,
+                                    header.key,
+                                    e.target.value
+                                  )
+                                }
+                                error={!!errorFields.rows[rowIdx]?.[header.key]}
+                                size="small"
+                                variant="outlined"
+                                inputRef={(el) =>
+                                  registerInputRef(rowIdx, header.key, el)
+                                }
+                                sx={{
+                                  width: "100%",
+                                  background: errorFields.rows[rowIdx]?.[
+                                    header.key
+                                  ]
+                                    ? "#fff0f0"
+                                    : "#fff",
+                                  mt: 0.5,
+                                  "& .MuiOutlinedInput-root": {
+                                    borderRadius: 1,
+                                    fontSize: 15,
+                                  },
+                                  "& input": {
+                                    fontSize: 17,
+                                  },
+                                }}
+                              />
+                            )}
                           </Box>
                         ))}
                     </CardContent>
