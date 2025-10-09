@@ -9,15 +9,15 @@ const ReceiptDetails = () => {
   const navigate = useNavigate();
 
   // Try to get real_receipt_id from location.state or from query param
-//   let real_receipt_id: string | undefined = undefined;
-//   if (location.state && (location.state as any).real_receipt_id) {
-//     real_receipt_id = (location.state as any).real_receipt_id;
-//   } else {
-//     // fallback: try to get from search params
-//     const params = new URLSearchParams(location.search);
-//     real_receipt_id = params.get("real_receipt_id") || undefined;
-//   }
-  let real_receipt_id = 37
+  let real_receipt_id: string | undefined = undefined;
+  if (location.state && (location.state as any).real_receipt_id) {
+    real_receipt_id = (location.state as any).real_receipt_id;
+  } else {
+    // fallback: try to get from search params
+    const params = new URLSearchParams(location.search);
+    real_receipt_id = params.get("real_receipt_id") || undefined;
+  }
+  // let real_receipt_id = 14
 
   const [loading, setLoading] = useState(true);
   const [receipt, setReceipt] = useState<any>(null);

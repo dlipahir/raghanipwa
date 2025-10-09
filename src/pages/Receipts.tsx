@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { getReceipts } from "../api/master";
 import Pagination from "@mui/material/Pagination";
 import Stack from "@mui/material/Stack";
+import { useNavigate } from "react-router-dom";
 
 // Minimal Receipt component
 const Receipt: React.FC<{ receipt: any }> = ({ receipt }) => (
@@ -41,6 +42,8 @@ const Receipt: React.FC<{ receipt: any }> = ({ receipt }) => (
 );
 
 const Receipts: React.FC = () => {
+  const navigate = useNavigate();
+
   const [receipts, setReceipts] = useState<any[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -76,7 +79,9 @@ const Receipts: React.FC = () => {
   const handleCardClick = (receipt: any) => {
     // Implement navigation or modal here if needed
     // For now, just log
+    // Use react-router-dom's useNavigate to navigate to /receipt-details with real_receipt_id as state
     console.log("Clicked receipt:", receipt);
+    navigate("/receipt-details", { state: { real_receipt_id: receipt.real_receipt_id || receipt._id || receipt.receipt_id } });
   };
 
   const handlePageChange = (_event: React.ChangeEvent<unknown>, value: number) => {

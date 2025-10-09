@@ -22,14 +22,14 @@ const HomePage = () => {
   const navigate = useNavigate()
   // Set default as today
   const [fromDate, setFromDate] = React.useState<Dayjs | null>(
-    dayjs().subtract(1, "year")
+    dayjs()
   );
   const [toDate, setToDate] = React.useState<Dayjs | null>(dayjs());
   const [sellerid, setSellerid] = useState();
   const [customerid, setCustomerid] = useState();
   const [icounts, setIcounts] = useState({receiptcounts: 0, invoicecounts: 0})
   const[scounts,setScounts] = useState({sellerCount: 5, customerCount: 4})
-  const[billType,setBillType] = useState()
+  const[billType,setBillType] = useState("receipt")
   
   // Use MUI's breakpoint for mobile
   const isMobile = useMediaQuery("(max-width:600px)");

@@ -84,11 +84,11 @@ function App() {
             <Route 
               path="/receipt-details" 
               element={
-                <ProtectedRoute>
+                // <ProtectedRoute>
                   <ResponsiveDrawer heading="Receipt Details">
                     <ReceiptDetails />
                   </ResponsiveDrawer>
-                </ProtectedRoute>
+                // </ProtectedRoute>
               } 
             />
             <Route 
