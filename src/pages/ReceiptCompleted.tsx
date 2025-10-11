@@ -14,6 +14,7 @@ import Stack from "@mui/material/Stack";
 import Box from "@mui/material/Box";
 import CircularProgress from "@mui/material/CircularProgress";
 pdfjs.GlobalWorkerOptions.workerSrc = "/pdf.worker.min.mjs";
+import WhatsAppIcon from '@mui/icons-material/WhatsApp';
 
 export default function ReceiptCompleted() {
   const navigate = useNavigate();
@@ -50,10 +51,10 @@ export default function ReceiptCompleted() {
   useEffect(() => {
     const renderPdf = async () => {
       try {
-        console.log("dataaa", receipt_id, shopname, data);
+        // console.log("dataaa", receipt_id, shopname, data);
         const { real_receipt_id } = await createRealReceipt(
           receipt_id,
-          shopname,
+           data[0]["seller"] ? data[0]["seller"]["shop_name"] : shopname,
           data
         );
         const blob = await generatePdf(real_receipt_id, shopname, data, "blob");
@@ -86,10 +87,10 @@ export default function ReceiptCompleted() {
   }, []);
 
   const handleDownload = () => {
-    generatePdf(receipt_id, shopname, data, "download");
+    generatePdf(realReceiptId, shopname, data, "download");
   };
   const handleShare = () => {
-    generatePdf(receipt_id, shopname, data, "share");
+    generatePdf(realReceiptId, shopname, data, "share");
   };
 
   return (
@@ -115,12 +116,7 @@ export default function ReceiptCompleted() {
               color="success"
               fullWidth
               startIcon={
-                <Box
-                  component="img"
-                  src="whatsapp.svg"
-                  sx={{ width: 24, height: 24 }}
-                  alt="Whatsapp"
-                />
+                <WhatsAppIcon />
               }
               onClick={() => setModalOpen(true)}
             >

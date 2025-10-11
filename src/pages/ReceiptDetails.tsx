@@ -3,10 +3,14 @@ import { generatePdf } from "@/utils/generatePdf";
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Document, pdfjs } from "react-pdf";
+import ClientContactModal from "@/components/ClientContactModal";
+import { Box, Button } from "@mui/material";
+import WhatsAppIcon from "@mui/icons-material/WhatsApp";
 
 const ReceiptDetails = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const [modalOpen, setModalOpen] = useState(false);
 
   // Try to get real_receipt_id from location.state or from query param
   let real_receipt_id: string | undefined = undefined;
@@ -57,7 +61,7 @@ const ReceiptDetails = () => {
         }
 
         const data = await getReceipt(real_receipt_id);
-        setReceipt(data.receipt.receipt_data);
+        setReceipt(data.receipt);
 
         // If you want to show the PDF as before, keep the PDF rendering logic.
         // But now, we will show all images from all batches.
@@ -104,32 +108,48 @@ const ReceiptDetails = () => {
         padding: 32,
       }}
     >
-      <img src={imgSrc} alt="PDF as Image" style={{ width: "100%", height: "auto" }} className="w-full h-auto border-1 border-red-300"/>
+      <img
+        src={imgSrc}
+        alt="PDF as Image"
+        style={{ width: "100%", height: "auto" }}
+        className="w-full h-auto border-1 border-red-300"
+      />
+            <Button
+        variant="contained"
+        color="success"
+        fullWidth
+        startIcon={<WhatsAppIcon />}
+        onClick={() => setModalOpen(true)}
+      >
+        Whatsapp
+      </Button>
 
-      {receipt.map((rec: { files: string[] }, recIdx: number) =>
-      (
-
-      <>
-        <div style={{ fontWeight: 600, fontSize: 16, margin: "16px 0 8px" }}>
-          Batch #{recIdx + 1}
-        </div>{
-
-        rec.files.map((itm: string, itmIdx: number) => (
-          <img
-            key={`receipt-img-${recIdx}-${itmIdx}`}
-            src={itm}
-            alt="PDF as Image"
-            style={{ width: "100%", height: "auto" }}
-            className="w-full h-auto border-1 border-red-300 mt-1"
-          />
-        ))}
-      </>
-      )
-
-      )}
+      {receipt.receipt_data.map((rec: { files: string[] }, recIdx: number) => (
+        <>
+          <div style={{ fontWeight: 600, fontSize: 16, margin: "16px 0 8px" }}>
+            Batch #{recIdx + 1}
+          </div>
+          {rec.files.map((itm: string, itmIdx: number) => (
+            <img
+              key={`receipt-img-${recIdx}-${itmIdx}`}
+              src={itm}
+              alt="PDF as Image"
+              style={{ width: "100%", height: "auto" }}
+              className="w-full h-auto border-1 border-red-300 mt-1"
+            />
+          ))}
+        </>
+      ))}
       <div style={{ marginTop: 24, textAlign: "center" }}>
         <button onClick={() => navigate(-1)}>Back</button>
       </div>
+
+      <ClientContactModal
+        receipt_no={real_receipt_id}
+        client_name={receipt?.shopname}
+        open={modalOpen}
+        onClose={() => setModalOpen(false)}
+      />
     </div>
   );
 };

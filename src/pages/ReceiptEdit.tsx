@@ -219,7 +219,6 @@ const ReceiptEdit = () => {
     if (hasError) {
       return;
     }
-
     navigate("/receipt-completed", {
       state: { receipt_id, data, shopname },
       replace: true,

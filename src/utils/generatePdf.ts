@@ -28,7 +28,7 @@ export const generatePdf = (receipt_id,shop_name, receiptData,opt) => {
   receiptData.forEach((data, idx) => {
     tableRows.push([
       { text: (idx + 1).toString() || "", fontSize: 10, margin: [2, 2, 2, 2] },
-      { text: data["party_name"] || "", fontSize: 10, margin: [2, 2, 2, 2] },
+      { text: data["customer"] ? data["customer"]["shop_name"] : data["party_name"] || "", fontSize: 10, margin: [2, 2, 2, 2] },
       { text: data["station"] || "", fontSize: 10, margin: [2, 2, 2, 2] },
       { text: data["bill_no"] || "", fontSize: 10, margin: [2, 2, 2, 2] },
       { text: data["bill_date"] || "", fontSize: 10, margin: [2, 2, 2, 2] },
@@ -93,7 +93,7 @@ export const generatePdf = (receipt_id,shop_name, receiptData,opt) => {
       {
         text: [
           "Received with thanks from M/s. ",
-          { text: shop_name || "", italics: true },
+          { text: receiptData[0]["seller"] ? receiptData[0]["seller"]["shop_name"] : shop_name || "", italics: true },
         ],
         style: "normal",
       },
