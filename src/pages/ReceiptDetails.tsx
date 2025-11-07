@@ -30,7 +30,7 @@ const ReceiptDetails = () => {
 
   useEffect(() => {
     const renderPdf = async () => {
-      const loadingTask = pdfjs.getDocument(`https://storage.googleapis.com/raghanidata/Receipt/Receipt_${real_receipt_id}.pdf`);
+      const loadingTask = pdfjs.getDocument(`https://storage.googleapis.com/raghaninvoices/Receipt/Receipt_${real_receipt_id}.pdf`);
       const pdf = await loadingTask.promise;
       const page = await pdf.getPage(1);
 
@@ -132,7 +132,7 @@ const ReceiptDetails = () => {
           {rec.files.map((itm: string, itmIdx: number) => (
             <img
               key={`receipt-img-${recIdx}-${itmIdx}`}
-              src={itm.replace("raghaninvoices", "raghanidata")}
+              src={itm}
               alt="PDF as Image"
               style={{ width: "100%", height: "auto" }}
               className="w-full h-auto border-1 border-red-300 mt-1"
@@ -141,7 +141,7 @@ const ReceiptDetails = () => {
         </>
       ))}
       <div style={{ marginTop: 24, textAlign: "center" }}>
-        <Button variant="contained" color="primary" onClick={() => navigate(-1)}>Back</Button>
+        <button onClick={() => navigate(-1)}>Back</button>
       </div>
 
       <ClientContactModal
