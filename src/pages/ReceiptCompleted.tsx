@@ -18,11 +18,12 @@ import WhatsAppIcon from '@mui/icons-material/WhatsApp';
 
 export default function ReceiptCompleted() {
   const navigate = useNavigate();
-  const [imgSrc, setImgSrc] = useState<string | null>(null);
+  const [imgSrcArr, setImgSrcArr] = useState<string[]>([]);
   const location = useLocation();
   const { receipt_id, data, shopname } = location.state || {};
   const [modalOpen, setModalOpen] = useState(false);
   const [realReceiptId, setRealReceiptId] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     window.history.pushState(null, "", window.location.href);
@@ -31,9 +32,9 @@ export default function ReceiptCompleted() {
     };
   }, [navigate]);
 
-  const handleInvoiceDataUpdate = async (real_receipt_id, data) => {
-    const shortdata = data.map((inv) => ({
-      _id:inv._id,
+  const handleInvoiceDataUpdate = async (real_receipt_id: any, data: any) => {
+    const shortdata = data.map((inv: any) => ({
+      _id: inv._id,
       lr_date: inv.lr_date,
       lr_no: inv.lr_no,
       bill_date: inv.bill_date,
@@ -45,33 +46,38 @@ export default function ReceiptCompleted() {
 
     const updateddata = { real_receipt_id, shortdata };
     console.log(updateddata);
-   await updateReceiptCompleted(updateddata)
+    await updateReceiptCompleted(updateddata);
   };
 
   useEffect(() => {
     const renderPdf = async () => {
       try {
-        // console.log("dataaa", receipt_id, shopname, data);
+        setLoading(true);
         const { real_receipt_id } = await createRealReceipt(
           receipt_id,
-           data[0]["seller"] ? data[0]["seller"]["shop_name"] : shopname,
+          data[0]?.seller ? data[0].seller.shop_name : shopname,
           data
         );
         const blob = await generatePdf(real_receipt_id, shopname, data, "blob");
         const arrayBuffer = await (blob as Blob).arrayBuffer();
         const pdf = await pdfjs.getDocument({ data: arrayBuffer }).promise;
-        const page = await pdf.getPage(1);
+        const numPages = pdf.numPages;
+        const imagePages: string[] = [];
 
-        const viewport = page.getViewport({ scale: 2 });
-        const canvas = document.createElement("canvas");
-        const context = canvas.getContext("2d");
-        if (!context) throw new Error("Failed to get canvas context");
-        canvas.width = viewport.width;
-        canvas.height = viewport.height;
+        for (let pageNum = 1; pageNum <= numPages; pageNum++) {
+          const page = await pdf.getPage(pageNum);
+          const viewport = page.getViewport({ scale: 2 });
+          const canvas = document.createElement("canvas");
+          const context = canvas.getContext("2d");
+          if (!context) throw new Error("Failed to get canvas context");
+          canvas.width = viewport.width;
+          canvas.height = viewport.height;
+          await page.render({ canvasContext: context, viewport }).promise;
+          imagePages.push(canvas.toDataURL("image/png"));
+        }
 
-        await page.render({ canvasContext: context, viewport }).promise;
         setRealReceiptId(real_receipt_id);
-        setImgSrc(canvas.toDataURL("image/png"));
+        setImgSrcArr(imagePages);
 
         const signedUrlsRes = await getSignedUrl(real_receipt_id);
         const { url } = signedUrlsRes as any;
@@ -79,6 +85,8 @@ export default function ReceiptCompleted() {
         await handleInvoiceDataUpdate(real_receipt_id, data);
       } catch (error) {
         console.error("Error rendering PDF or uploading:", error);
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -95,29 +103,31 @@ export default function ReceiptCompleted() {
 
   return (
     <Box p={3}>
-      {imgSrc ? (
+      {!loading && imgSrcArr.length > 0 ? (
         <>
-          <Box
-            component="img"
-            src={imgSrc}
-            alt="PDF as Image"
-            sx={{
-              width: "100%",
-              height: "auto",
-              border: 1,
-              borderColor: "red.300",
-              borderRadius: 1,
-              mb: 2,
-            }}
-          />
+          {imgSrcArr.map((src, idx) => (
+            <Box
+              key={idx}
+              component="img"
+              src={src}
+              alt={`PDF Page ${idx + 1} as Image`}
+              sx={{
+                width: "100%",
+                height: "auto",
+                border: 1,
+                borderColor: "red.300",
+                borderRadius: 1,
+                mb: 2,
+                display: "block",
+              }}
+            />
+          ))}
           <Stack spacing={2}>
             <Button
               variant="contained"
               color="success"
               fullWidth
-              startIcon={
-                <WhatsAppIcon />
-              }
+              startIcon={<WhatsAppIcon />}
               onClick={() => setModalOpen(true)}
             >
               Whatsapp
