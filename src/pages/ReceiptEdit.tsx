@@ -21,10 +21,12 @@ import {
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import AddIcon from "@mui/icons-material/Add";
+import VisibilityIcon from "@mui/icons-material/Visibility";
 import { useTheme } from "@mui/material/styles";
 import CustomerModal from "@/components/CustomerModal";
 import CustomerAutocomplete from "@/components/CustomerAutocomplete";
 import SellerAutocomplete from "@/components/SellerAutocomplete";
+import ImageModal from "@/components/ImageModal";
 
 interface ReceiptDataItem {
   [key: string]: any;
@@ -52,48 +54,6 @@ const ReceiptEdit = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { receipt_id, receiptData } = location.state || {};
-//   console.log("receiptData:", JSON.stringify(receiptData));
-// const receipt_id = 100
-// const receiptData = [
-//     {
-//       _id: "68d0fb6a17352e33cc96668f",
-//       customer:null,
-//     //   customer: {
-//     //     _id: "68d2f7344a2de7a6fe2976cb",
-//     //     shop_name: "KP Exports",
-//     //     city: "Siliguri",
-//     //     state: "West Bengal",
-//     //     gst_no: "19ADTPT5557H1ZM",
-//     //     createdAt: "2025-09-23T19:38:28.299Z",
-//     //     updatedAt: "2025-09-23T19:38:28.299Z",
-//     //     __v: 0
-//     //   },
-//     seller:null,
-//     //   seller: {
-//     //     _id: "68d2f5d835d9a523d3a7c3a1",
-//     //     shop_name: "OMKKAR KURTIES PRIVATE LIMITED",
-//     //     city: "Ahmedabad",
-//     //     state: "Gujarat",
-//     //     gst_no: "24AAECO4189R1ZP",
-//     //     createdAt: "2025-09-23T19:32:40.705Z",
-//     //     updatedAt: "2025-09-23T19:32:40.705Z",
-//     //     __v: 0
-//     //   },
-//       shop_name: "OMKKAR KURTIES PRIVATE LIMITED",
-//       shop_gst: "24AAECO4189R1ZP",
-//       shop_city: "Ahmedabad",
-//       shop_state: "Gujarat",
-//       party_name: "KP Exports",
-//       party_gst: "19ADTPT5557H1ZM",
-//       party_city: "Siliguri",
-//       party_state: "West Bengal",
-//       station: "West Bengal",
-//       bill_no: "10846",
-//       bill_date: "11/09/2025",
-//       lr_no: "713757X1",
-//       lr_date: "15/09/2025"
-//     }
-//   ]
 
   const [headers] = useState<{ key: string; label: string }[]>([
     ...defaultHeaders,
@@ -108,8 +68,27 @@ const ReceiptEdit = () => {
    data?.[0]?.["seller"] || null
   );
 
-  console.log("seller",seller)
-  console.log("data",data)
+  // ImageModal state
+  const [imageModalOpen, setImageModalOpen] = useState(false);
+  const [selectedImages, setSelectedImages] = useState<string[]>([]);
+
+  // For table/card row image modal open
+  const handleViewRowImages = (row: any) => {
+    if (row?.files && Array.isArray(row.files) && row.files.length > 0) {
+      setSelectedImages(row.files);
+      setImageModalOpen(true);
+    } else {
+      setSelectedImages([]);
+      setImageModalOpen(true); // Show open with empty images for now
+    }
+  };
+
+  const handleCloseImageModal = () => {
+    setImageModalOpen(false);
+    setSelectedImages([]);
+  };
+
+  // ---- Rest unchanged ----
 
   const [errorFields, setErrorFields] = useState<{
     shopname: boolean;
@@ -226,7 +205,6 @@ const ReceiptEdit = () => {
   };
   const handleCreate = (_id,type,cdata) =>{
     if(type === "seller"){
-      // handleSellerChange(cdata);
       setSeller(cdata);
       return;
     }
@@ -255,24 +233,20 @@ const ReceiptEdit = () => {
     }
     return row;
   });
-  console.log("updated_data",updatedData)
   setData(updatedData);
   }
 
   const handleSellerChange = (value: any | null) => {
-
-  // Update the seller for each row in data to the new value
-  // setSeller(value);
-  setData((prevData) =>
-    prevData.map((row) => ({
-      ...row,
-      seller: value,
-      shop_name: value?.shop_name || "",
-      shop_gst: value?.gst_no || "",
-      shop_state: value?.state || "",
-      shop_city: value?.city || "",
-    }))
-  );
+    setData((prevData) =>
+      prevData.map((row) => ({
+        ...row,
+        seller: value,
+        shop_name: value?.shop_name || "",
+        shop_gst: value?.gst_no || "",
+        shop_state: value?.state || "",
+        shop_city: value?.city || "",
+      }))
+    );
   };
 
   useEffect(() => {
@@ -282,7 +256,7 @@ const ReceiptEdit = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [seller]);
 
-  const handleCustomerChange = (value: any | null,_id) => {
+  const handleCustomerChange = (value: any | null, _id) => {
     setData((prevData) =>
       prevData.map((row) =>
         row._id === _id
@@ -310,6 +284,12 @@ const ReceiptEdit = () => {
 
   return (
     <div>
+      {/* ImageModal for images viewing */}
+      <ImageModal
+        openImages={imageModalOpen}
+        handleCloseImages={handleCloseImageModal}
+        files={selectedImages}
+      />
       {data.length > 0 &&
         data.map(
           (row, idx) =>
@@ -322,7 +302,8 @@ const ReceiptEdit = () => {
                   city: row.party_city,
                   state: row.party_state,
                   gst_no: row.party_gst,
-                  _id:row._id
+                  _id:row._id,
+                  files: row?.files || []
                 }}
                 handleCreate={handleCreate}
               />
@@ -374,36 +355,6 @@ const ReceiptEdit = () => {
               style={{ width: 110, height: 110, objectFit: "contain" }}
             />
           </Box>
-          {/* <Box sx={{ flex: 1, textAlign: "center" }}>
-            <Typography
-              variant="h4"
-              sx={{
-                fontWeight: 700,
-                letterSpacing: 2,
-                color: "#222",
-                lineHeight: 1.1,
-                fontSize: { xs: "7vw", sm: 32 },
-                textAlign: { xs: "center", sm: "center" },
-              }}
-              className="receipt-title"
-            >
-              RAGHANI
-            </Typography>
-            <Typography
-              variant="subtitle1"
-              sx={{
-                fontWeight: 500,
-                color: "#555",
-                mt: 0.5,
-                letterSpacing: 1,
-                fontSize: { xs: "4vw", sm: 18 },
-                textAlign: { xs: "center", sm: "center" },
-              }}
-              className="receipt-subtitle"
-            >
-              BR/LR Receiving Book
-            </Typography>
-          </Box> */}
         </Stack>
 
         <Box
@@ -450,48 +401,7 @@ const ReceiptEdit = () => {
         </Stack>
         <Box sx={{ fontSize: { xs: "3.5vw", sm: 15 }, mt: 0.5 }}>
           Received with thanks from M/s.&nbsp;
-          {/* <TextField
-            inputRef={shopNameInputRef}
-            value={shopname}
-            onChange={(e) => {
-              setShopName(e.target.value);
-              if (errorFields.shopname && e.target.value.trim() !== "") {
-                setErrorFields((prev) => ({ ...prev, shopname: false }));
-              }
-            }}
-            error={errorFields.shopname}
-            size="medium"
-            variant="standard"
-            sx={{
-              fontWeight: 600,
-              minWidth: { xs: "90vw", sm: 350 },
-              maxWidth: { xs: "100vw", sm: 500 },
-              fontSize: { xs: "4vw", sm: 15 },
-              background: errorFields.shopname ? "#fff0f0" : "#fff",
-              "& .MuiOutlinedInput-root": {
-                p: "2px 6px",
-              },
-              "& input": {
-                fontWeight: 600,
-                fontSize: { xs: "4vw", sm: 15 },
-              },
-            }}
-            className="receipt-shopname-input"
-          /> */}
-                    {/* <Typography
-                      sx={{
-                        fontWeight: 600,
-                        minWidth: { xs: "90vw", sm: 350 },
-                        maxWidth: { xs: "100vw", sm: 500 },
-                        fontSize: { xs: "4vw", sm: 15 },
-                        display: "inline-block",
-                        p: "2px 6px",
-                      }}
-                      className="receipt-shopname-typography"
-                    >
-                      {shopname}
-                    </Typography> */}
-                    <SellerAutocomplete val={seller} setval={setSeller} label={false}/>
+          <SellerAutocomplete val={seller} setval={setSeller} label={false}/>
         </Box>
 
         {/* Table or Card List */}
@@ -531,7 +441,8 @@ const ReceiptEdit = () => {
                     <TableCell
                       sx={{
                         border: "1px solid #bbb",
-                        width: 48,
+                        width: 90,
+                        textAlign: "center"
                       }}
                     />
                   </TableRow>
@@ -600,7 +511,10 @@ const ReceiptEdit = () => {
                           align="center"
                           sx={{
                             border: "1px solid #ccc",
-                            width: 48,
+                            width: 90,
+                            display: "flex",
+                            justifyContent: "center",
+                            gap: 1,
                           }}
                         >
                           <IconButton
@@ -610,6 +524,14 @@ const ReceiptEdit = () => {
                             aria-label="Remove row"
                           >
                             <DeleteIcon fontSize="small" />
+                          </IconButton>
+                          <IconButton
+                            onClick={() => handleViewRowImages(row)}
+                            color="primary"
+                            size="small"
+                            aria-label="View images"
+                          >
+                            <VisibilityIcon fontSize="small" />
                           </IconButton>
                         </TableCell>
                       </TableRow>
@@ -656,6 +578,14 @@ const ReceiptEdit = () => {
                           aria-label="Remove row"
                         >
                           <DeleteIcon fontSize="small" />
+                        </IconButton>
+                        <IconButton
+                          onClick={() => handleViewRowImages(row)}
+                          color="primary"
+                          size="small"
+                          aria-label="View images"
+                        >
+                          <VisibilityIcon fontSize="small" />
                         </IconButton>
                       </Stack>
                       {headers
