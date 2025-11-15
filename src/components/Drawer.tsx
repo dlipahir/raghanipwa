@@ -24,6 +24,7 @@ import PeopleIcon from '@mui/icons-material/People';
 import StoreIcon from '@mui/icons-material/Store';
 import PersonIcon from '@mui/icons-material/Person';
 import LogoutIcon from '@mui/icons-material/Logout';
+import ContactPageIcon from '@mui/icons-material/ContactPage';
 
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -71,6 +72,7 @@ export default function ResponsiveDrawer(props: Props) {
     { text: 'Receipt', path: '/receipts', icon: <ReceiptLongIcon /> },
     { text: 'Customer', path: '/customers', icon: <PeopleIcon /> },
     { text: 'Seller', path: '/sellers', icon: <StoreIcon /> },
+    { text: 'Client Contact', path: '/client-contacts', icon: <ContactPageIcon /> },
     ...(isAdmin ? [{ text: 'User', path: '/users', icon: <PersonIcon /> }] : []),
   ];
 

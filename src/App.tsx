@@ -15,6 +15,7 @@ import ReceiptsTable from './pages/Receipts'
 import Users from './pages/Users'
 import SellerPage from './pages/Seller'
 import CustomerPage from './pages/Customer'
+import ClientContactPage from './pages/ClientContact'
 
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -147,6 +148,16 @@ function App() {
                 <ProtectedRoute>
                   <ResponsiveDrawer heading="Customers">
                     <CustomerPage />
+                  </ResponsiveDrawer>
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/client-contacts" 
+              element={
+                <ProtectedRoute>
+                  <ResponsiveDrawer heading="Client Contacts">
+                    <ClientContactPage />
                   </ResponsiveDrawer>
                 </ProtectedRoute>
               } 
