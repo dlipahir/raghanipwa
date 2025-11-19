@@ -37,3 +37,11 @@ export const deleteClientContact = async (id: string | number) => {
   const response = await axiosAuth.delete(`/clientcontact/${id}`);
   return response.data;
 };
+
+
+
+// Send a WhatsApp message to a client contact using a backend endpoint
+export const sendWhatsappToClientContact = async ( phoneNumber , shop_name, receipt_id ) => {
+  const response = await axiosAuth.post(`/clientcontact/send-whatsapp-pdf`, {  phoneNumber, shop_name, receipt_id  });
+  return response.data;
+};

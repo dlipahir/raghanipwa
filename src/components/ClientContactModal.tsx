@@ -1,5 +1,5 @@
 import React, { useEffect, useState, ChangeEvent } from "react";
-import { getClientContactsByName, updateClientContact, createClientContact } from "@/api/clientContact";
+import { getClientContactsByName, updateClientContact, createClientContact, sendWhatsappToClientContact } from "@/api/clientContact";
 import Dialog from "@mui/material/Dialog";
 import DialogTitle from "@mui/material/DialogTitle";
 import DialogContent from "@mui/material/DialogContent";
@@ -12,6 +12,8 @@ import ListItem from "@mui/material/ListItem";
 import ListItemText from "@mui/material/ListItemText";
 import Stack from "@mui/material/Stack";
 import Box from "@mui/material/Box";
+import Snackbar from "@mui/material/Snackbar";
+import Alert from "@mui/material/Alert";
 
 // Types
 interface ClientContactItem {
@@ -42,6 +44,13 @@ const ClientContactModal: React.FC<ClientContactModalProps> = ({
   const [newNumber, setNewNumber] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
+
+  // Snackbar state for WhatsApp send popup
+  const [whatsappSnackbar, setWhatsappSnackbar] = useState<{
+    open: boolean;
+    message: string;
+    severity: "success" | "error";
+  }>({ open: false, message: "", severity: "success" });
 
   // Fetch contact by name
   useEffect(() => {
@@ -101,120 +110,162 @@ const ClientContactModal: React.FC<ClientContactModalProps> = ({
   };
 
   // WhatsApp send message
-  const sendWhatsApp = (number: string) => {
-    const receipt_url = `https://storage.googleapis.com/raghaninvoices/Receipt/Receipt_${receipt_no}.pdf`;
-    const message = `Hello ${client_name},\n Receipt ${receipt_no} : ${receipt_url}
-If you’d like an invoice, return receipt, or need help, just reply to this message.`;
-    const url = `https://wa.me/91${number}?text=${encodeURIComponent(message)}`;
-    window.open(url, "_blank");
+  const sendWhatsApp = async (number: string) => {
+    setLoading(true);
+    setError(null);
+    try {
+      await sendWhatsappToClientContact(number, client_name, receipt_no);
+      setWhatsappSnackbar({
+        open: true,
+        message: "WhatsApp sent successfully.",
+        severity: "success",
+      });
+    } catch (err) {
+      setWhatsappSnackbar({
+        open: true,
+        message: "Failed to send WhatsApp.",
+        severity: "error",
+      });
+      setError("Failed to send WhatsApp");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
     setNewNumber(e.target.value);
   };
 
+  const handleSnackbarClose = (
+    event?: React.SyntheticEvent | Event,
+    reason?: string
+  ) => {
+    if (reason === "clickaway") {
+      return;
+    }
+    setWhatsappSnackbar((prev) => ({ ...prev, open: false }));
+  };
+
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="xs" fullWidth>
-      <DialogTitle>Client: {client_name}</DialogTitle>
-      <DialogContent>
-        {loading ? (
-          <Typography>Loading...</Typography>
-        ) : error ? (
-          <Typography color="error">{error}</Typography>
-        ) : !contact ? (
-          <Box>
-            <Typography>No contact found for "{client_name}"</Typography>
-            <Box mt={2}>
-              <Typography fontWeight={600} mb={1}>
-                Create Contact & Add Number
-              </Typography>
-              <Stack direction="row" spacing={1}>
-                <TextField
-                  type="text"
-                  value={newNumber}
-                  onChange={handleInputChange}
-                  placeholder="e.g. 919999999999"
-                  inputProps={{ inputMode: "numeric" }}
-                  disabled={adding || creating}
-                  size="small"
-                  fullWidth
-                />
-                <Button
-                  variant="contained"
-                  color="primary"
-                  onClick={handleAddNumber}
-                  disabled={adding || creating || !newNumber.trim()}
-                >
-                  {creating ? "Creating..." : adding ? "Adding..." : "Create & Add"}
-                </Button>
-              </Stack>
-            </Box>
-          </Box>
-        ) : (
-          <Stack spacing={2}>
+    <>
+      <Dialog open={open} onClose={onClose} maxWidth="xs" fullWidth>
+        <DialogTitle>Client: {client_name}</DialogTitle>
+        <DialogContent>
+          {loading ? (
+            <Typography>Loading...</Typography>
+          ) : error ? (
+            <Typography color="error">{error}</Typography>
+          ) : !contact ? (
             <Box>
-              <Typography fontWeight={600} mb={1}>
-                WhatsApp Numbers:
-              </Typography>
-              {contact.whatsapp_nos && contact.whatsapp_nos.length > 0 ? (
-                <List dense>
-                  {contact.whatsapp_nos.map((num, idx) => (
-                    <ListItem
-                      key={idx}
-                      secondaryAction={
-                        <Button
-                          variant="contained"
-                          color="success"
-                          size="small"
-                          onClick={() => sendWhatsApp(num)}
-                        >
-                          WhatsApp
-                        </Button>
-                      }
-                      disablePadding
-                    >
-                      <ListItemText primary={num} />
-                    </ListItem>
-                  ))}
-                </List>
-              ) : (
-                <Typography>No WhatsApp numbers found.</Typography>
-              )}
+              <Typography>No contact found for "{client_name}"</Typography>
+              <Box mt={2}>
+                <Typography fontWeight={600} mb={1}>
+                  Create Contact & Add Number
+                </Typography>
+                <Stack direction="row" spacing={1}>
+                  <TextField
+                    type="text"
+                    value={newNumber}
+                    onChange={handleInputChange}
+                    placeholder="e.g. 919999999999"
+                    inputProps={{ inputMode: "numeric" }}
+                    disabled={adding || creating}
+                    size="small"
+                    fullWidth
+                  />
+                  <Button
+                    variant="contained"
+                    color="primary"
+                    onClick={handleAddNumber}
+                    disabled={adding || creating || !newNumber.trim()}
+                  >
+                    {creating ? "Creating..." : adding ? "Adding..." : "Create & Add"}
+                  </Button>
+                </Stack>
+              </Box>
             </Box>
-            <Box>
-              <Typography fontWeight={600} mb={1}>
-                Add Number
-              </Typography>
-              <Stack direction="row" spacing={1}>
-                <TextField
-                  type="text"
-                  value={newNumber}
-                  onChange={handleInputChange}
-                  placeholder="e.g. 919999999999"
-                  inputProps={{ inputMode: "numeric" }}
-                  disabled={adding}
-                  size="small"
-                  fullWidth
-                />
-                <Button
-                  variant="contained"
-                  color="primary"
-                  onClick={handleAddNumber}
-                  disabled={adding || !newNumber.trim()}
-                >
-                  {adding ? "Adding..." : "Add"}
-                </Button>
-              </Stack>
-            </Box>
-          </Stack>
-        )}
-      </DialogContent>
-      <DialogActions>
-        <Button onClick={onClose} fullWidth variant="outlined">
-          Close
-        </Button>
-      </DialogActions>
-    </Dialog>
+          ) : (
+            <Stack spacing={2}>
+              <Box>
+                <Typography fontWeight={600} mb={1}>
+                  WhatsApp Numbers:
+                </Typography>
+                {contact.whatsapp_nos && contact.whatsapp_nos.length > 0 ? (
+                  <List dense>
+                    {contact.whatsapp_nos.map((num, idx) => (
+                      <ListItem
+                        key={idx}
+                        secondaryAction={
+                          <Button
+                            variant="contained"
+                            color="success"
+                            size="small"
+                            onClick={() => sendWhatsApp(num)}
+                            disabled={loading}
+                          >
+                            {loading ? "Sending..." : "WhatsApp"}
+                          </Button>
+                        }
+                        disablePadding
+                      >
+                        <ListItemText primary={num} />
+                      </ListItem>
+                    ))}
+                  </List>
+                ) : (
+                  <Typography>No WhatsApp numbers found.</Typography>
+                )}
+              </Box>
+              <Box>
+                <Typography fontWeight={600} mb={1}>
+                  Add Number
+                </Typography>
+                <Stack direction="row" spacing={1}>
+                  <TextField
+                    type="text"
+                    value={newNumber}
+                    onChange={handleInputChange}
+                    placeholder="e.g. 919999999999"
+                    inputProps={{ inputMode: "numeric" }}
+                    disabled={adding}
+                    size="small"
+                    fullWidth
+                  />
+                  <Button
+                    variant="contained"
+                    color="primary"
+                    onClick={handleAddNumber}
+                    disabled={adding || !newNumber.trim()}
+                  >
+                    {adding ? "Adding..." : "Add"}
+                  </Button>
+                </Stack>
+              </Box>
+            </Stack>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={onClose} fullWidth variant="outlined">
+            Close
+          </Button>
+        </DialogActions>
+      </Dialog>
+      <Snackbar
+        open={whatsappSnackbar.open}
+        autoHideDuration={3000}
+        onClose={handleSnackbarClose}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+      >
+        <Alert
+          onClose={handleSnackbarClose}
+          severity={whatsappSnackbar.severity}
+          variant="filled"
+          sx={{ width: "100%" }}
+        >
+          {whatsappSnackbar.message}
+        </Alert>
+      </Snackbar>
+    </>
   );
 };
 
