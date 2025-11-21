@@ -6,6 +6,8 @@ import { pdfjs } from "react-pdf";
 import ClientContactModal from "@/components/ClientContactModal";
 import { Box, Button } from "@mui/material";
 import WhatsAppIcon from "@mui/icons-material/WhatsApp";
+import PrintIcon from "@mui/icons-material/Print";
+import DownloadIcon from "@mui/icons-material/Download";
 
 // pdf.js worker required for render
 pdfjs.GlobalWorkerOptions.workerSrc = "/pdf.worker.min.mjs";
@@ -29,6 +31,7 @@ const ReceiptDetails = () => {
   const [receipt, setReceipt] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
   const [imgSrcArr, setImgSrcArr] = useState<string[]>([]);
+  const [pdfBlob, setPdfBlob] = useState<Blob | null>(null);
 
   // Render ALL pages of PDF as images
   useEffect(() => {
@@ -39,9 +42,21 @@ const ReceiptDetails = () => {
       }
       setLoading(true);
       try {
-        const loadingTask = pdfjs.getDocument(
-          `https://storage.googleapis.com/raghaninvoices/Receipt/Receipt_${real_receipt_id}.pdf`
-        );
+        const pdfUrl = `https://storage.googleapis.com/raghaninvoices/Receipt/Receipt_${real_receipt_id}.pdf`;
+        // fetch the PDF and store blob so we can print/download from blob (cross-origin safe)
+        try {
+          const response = await fetch(pdfUrl);
+          if (response.ok) {
+            const blob = await response.blob();
+            setPdfBlob(blob);
+          } else {
+            setPdfBlob(null);
+          }
+        } catch (e) {
+          setPdfBlob(null);
+        }
+        // Render images via pdfjs
+        const loadingTask = pdfjs.getDocument(pdfUrl);
         const pdf = await loadingTask.promise;
         const numPages = pdf.numPages;
         const images: string[] = [];
@@ -60,6 +75,7 @@ const ReceiptDetails = () => {
       } catch (err) {
         // If PDF rendering fails, just don't display images
         setImgSrcArr([]);
+        setPdfBlob(null);
       }
       setLoading(false);
     };
@@ -93,6 +109,75 @@ const ReceiptDetails = () => {
 
     fetchReceiptAndRender();
   }, [real_receipt_id]);
+
+  // PDF download handler using pdfjs (blob)
+  const handleDownloadPdf = () => {
+    if (!real_receipt_id) return;
+    if (pdfBlob) {
+      const link = document.createElement("a");
+      link.href = window.URL.createObjectURL(pdfBlob);
+      link.download = `Receipt_${real_receipt_id}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      setTimeout(() => {
+        window.URL.revokeObjectURL(link.href);
+        document.body.removeChild(link);
+      }, 0);
+    } else {
+      // fallback to remote URL if blob loading failed
+      const pdfUrl = `https://storage.googleapis.com/raghaninvoices/Receipt/Receipt_${real_receipt_id}.pdf`;
+      const link = document.createElement("a");
+      link.href = pdfUrl;
+      link.download = `Receipt_${real_receipt_id}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+  };
+
+  // Print handler for PDF using pdfjs (blob)
+  const handlePrintPdf = () => {
+    if (pdfBlob) {
+      // open blob in new window for browser to print
+      const blobUrl = window.URL.createObjectURL(pdfBlob);
+      const printWindow = window.open(blobUrl, "_blank");
+      // revoke the blob after print
+      setTimeout(() => {
+        window.URL.revokeObjectURL(blobUrl);
+      }, 10000);
+      // Note: Printing functionality is now delegated to the PDF viewer
+    } else if (imgSrcArr.length > 0) {
+      // fallback: print via images
+      const printWindow = window.open("", "_blank");
+      if (!printWindow) return;
+
+      printWindow.document.write("<html><head><title>Print Receipt</title>");
+      printWindow.document.write(
+        `<style>
+          body { margin:0; padding:0 }
+          img { display:block; width:100%; max-width:650px; margin:0 auto 8px auto; }
+        </style>`
+      );
+      printWindow.document.write("</head><body>");
+      imgSrcArr.forEach((src, idx) => {
+        printWindow!.document.write(
+          `<img src="${src}" alt="PDF page ${idx + 1}" />`
+        );
+      });
+      printWindow.document.write("</body></html>");
+      printWindow.document.close();
+      printWindow.focus();
+      setTimeout(() => {
+        printWindow.print();
+        printWindow.close();
+      }, 400);
+    } else if (real_receipt_id) {
+      // fallback: open/print the PDF directly from URL
+      const pdfUrl = `https://storage.googleapis.com/raghaninvoices/Receipt/Receipt_${real_receipt_id}.pdf`;
+      const printWindow = window.open(pdfUrl, "_blank");
+      if (!printWindow) return;
+    }
+  };
 
   if (loading) {
     return (
@@ -147,9 +232,36 @@ const ReceiptDetails = () => {
         fullWidth
         startIcon={<WhatsAppIcon />}
         onClick={() => setModalOpen(true)}
+        style={{ marginBottom: 10, marginTop: 8 }}
       >
         Whatsapp
       </Button>
+
+      {/* Print & Download Buttons */}
+      <div style={{ display: "flex", gap: 12, marginBottom: 24 }}>
+        <Button
+          variant="outlined"
+          color="primary"
+          fullWidth
+          startIcon={<PrintIcon />}
+          onClick={handlePrintPdf}
+          style={{ flex: 1 }}
+          disabled={!real_receipt_id}
+        >
+          Print PDF
+        </Button>
+        <Button
+          variant="outlined"
+          color="primary"
+          fullWidth
+          startIcon={<DownloadIcon />}
+          onClick={handleDownloadPdf}
+          style={{ flex: 1 }}
+          disabled={!real_receipt_id}
+        >
+          Download PDF
+        </Button>
+      </div>
 
       {/* Show all batches/images (if any) */}
       {receipt?.receipt_data?.map?.((rec: { files: string[] }, recIdx: number) => (
@@ -170,7 +282,7 @@ const ReceiptDetails = () => {
       ))}
 
       <div style={{ marginTop: 24, textAlign: "center" }}>
-        <button onClick={() => navigate(-1)}>Back</button>
+        <Button onClick={() => navigate(-1)}>Back</Button>
       </div>
 
       <ClientContactModal
