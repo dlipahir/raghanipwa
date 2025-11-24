@@ -59,10 +59,10 @@ export const generatePdf = (receipt_id,shop_name, receiptData,opt) => {
           {
             stack: [
               {
-                text: "Shop No. 2006, Lift No. 6, Rathi Palace,",
+                text: "Shop No. 1502/1503,Floor 15 , Surana 101,",
                 style: "address",
               },
-              { text: "Ring Road, SURAT-2,", style: "address" },
+              { text: "SURAT GUJRAT 395003,", style: "address" },
               { text: "Ph.: 4897777-9, M.: 9558022777", style: "address" },
             ],
             alignment: "right",
