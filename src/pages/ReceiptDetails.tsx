@@ -1,4 +1,4 @@
-import { createRealReceipt, getReceipt } from "@/api/Invoice";
+import { createRealReceipt, getReceipt, getSignedUrl, updateReceiptCompleted, uploadPdfToSignedUrl } from "@/api/Invoice";
 import { generatePdf } from "@/utils/generatePdf";
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -32,53 +32,73 @@ const ReceiptDetails = () => {
   const [error, setError] = useState<string | null>(null);
   const [imgSrcArr, setImgSrcArr] = useState<string[]>([]);
   const [pdfBlob, setPdfBlob] = useState<Blob | null>(null);
+  const renderAllPages = async () => {
+    if (!real_receipt_id) {
+      setLoading(false);
+      return;
+    }
+    setLoading(true);
+    try {
+      const pdfUrl = `https://storage.googleapis.com/raghaninvoices/Receipt/Receipt_${real_receipt_id}.pdf`;
+      // fetch the PDF and store blob so we can print/download from blob (cross-origin safe)
+      try {
+        const response = await fetch(pdfUrl);
+        if (response.ok) {
+          const blob = await response.blob();
+          setPdfBlob(blob);
+        } else {
+          setPdfBlob(null);
+        }
+      } catch (e) {
+        setPdfBlob(null);
+      }
+      // Render images via pdfjs
+      const loadingTask = pdfjs.getDocument(pdfUrl);
+      const pdf = await loadingTask.promise;
+      const numPages = pdf.numPages;
+      const images: string[] = [];
+      for (let i = 1; i <= numPages; i++) {
+        const page = await pdf.getPage(i);
+        const viewport = page.getViewport({ scale: 2 });
+        const canvas = document.createElement("canvas");
+        const context = canvas.getContext("2d");
+        if (!context) continue;
+        canvas.width = viewport.width;
+        canvas.height = viewport.height;
+        await page.render({ canvasContext: context, viewport }).promise;
+        images.push(canvas.toDataURL("image/png"));
+      }
+      setImgSrcArr(images);
+    } catch (err) {
+      // If PDF rendering fails, just don't display images
+      setImgSrcArr([]);
+      setPdfBlob(null);
+    }
+    setLoading(false);
+  };
+  const fetchReceiptAndRender = async () => {
+    try {
+      setLoading(true);
+      setError(null);
 
-  // Render ALL pages of PDF as images
-  useEffect(() => {
-    const renderAllPages = async () => {
       if (!real_receipt_id) {
+        setError("No receipt ID provided.");
         setLoading(false);
         return;
       }
-      setLoading(true);
-      try {
-        const pdfUrl = `https://storage.googleapis.com/raghaninvoices/Receipt/Receipt_${real_receipt_id}.pdf`;
-        // fetch the PDF and store blob so we can print/download from blob (cross-origin safe)
-        try {
-          const response = await fetch(pdfUrl);
-          if (response.ok) {
-            const blob = await response.blob();
-            setPdfBlob(blob);
-          } else {
-            setPdfBlob(null);
-          }
-        } catch (e) {
-          setPdfBlob(null);
-        }
-        // Render images via pdfjs
-        const loadingTask = pdfjs.getDocument(pdfUrl);
-        const pdf = await loadingTask.promise;
-        const numPages = pdf.numPages;
-        const images: string[] = [];
-        for (let i = 1; i <= numPages; i++) {
-          const page = await pdf.getPage(i);
-          const viewport = page.getViewport({ scale: 2 });
-          const canvas = document.createElement("canvas");
-          const context = canvas.getContext("2d");
-          if (!context) continue;
-          canvas.width = viewport.width;
-          canvas.height = viewport.height;
-          await page.render({ canvasContext: context, viewport }).promise;
-          images.push(canvas.toDataURL("image/png"));
-        }
-        setImgSrcArr(images);
-      } catch (err) {
-        // If PDF rendering fails, just don't display images
-        setImgSrcArr([]);
-        setPdfBlob(null);
-      }
+
+      const data = await getReceipt(real_receipt_id);
+      setReceipt(data.receipt);
+
       setLoading(false);
-    };
+    } catch (err: any) {
+      setError(err?.message || "Failed to fetch receipt details.");
+      setLoading(false);
+    }
+  };
+  // Render ALL pages of PDF as images
+  useEffect(() => {
+
 
     renderAllPages();
     // eslint-disable-next-line
@@ -86,29 +106,44 @@ const ReceiptDetails = () => {
 
   // Fetch receipt data (for batches/images etc)
   useEffect(() => {
-    const fetchReceiptAndRender = async () => {
-      try {
-        setLoading(true);
-        setError(null);
 
-        if (!real_receipt_id) {
-          setError("No receipt ID provided.");
-          setLoading(false);
-          return;
-        }
-
-        const data = await getReceipt(real_receipt_id);
-        setReceipt(data.receipt);
-
-        setLoading(false);
-      } catch (err: any) {
-        setError(err?.message || "Failed to fetch receipt details.");
-        setLoading(false);
-      }
-    };
 
     fetchReceiptAndRender();
   }, [real_receipt_id]);
+
+
+  const handleInvoiceDataUpdate = async (real_receipt_id: any, data: any) => {
+    const shortdata = data.map((inv: any) => ({
+      _id: inv._id,
+      lr_date: inv.lr_date,
+      lr_no: inv.lr_no,
+      bill_date: inv.bill_date,
+      bill_no: inv.bill_no,
+      station: inv.station,
+      sellerid: inv?.seller?._id,
+      customerid: inv?.customer?._id,
+    }));
+    const updateddata = { real_receipt_id, shortdata };
+    await updateReceiptCompleted(updateddata);
+  };
+
+
+  const refresh_data = async ()=>{
+        try {
+          const blob = await generatePdf(real_receipt_id, receipt.shopname, receipt.data, "blob");
+          const signedUrlsRes = await getSignedUrl(real_receipt_id);
+          const { url } = signedUrlsRes as any;
+          await uploadPdfToSignedUrl(url.url, blob as Blob);
+          await handleInvoiceDataUpdate(real_receipt_id,receipt.data)
+          renderAllPages()
+        } catch (error) {
+          console.error("Error rendering PDF or uploading:", error);
+        } finally {
+          setLoading(false);
+        }
+      };
+  
+
 
   // PDF download handler using pdfjs (blob)
   const handleDownloadPdf = () => {
@@ -212,7 +247,7 @@ const ReceiptDetails = () => {
       }}
     >
       {/* Render all the pages of PDF as images */}
-      {imgSrcArr.length > 0 && (
+      {imgSrcArr.length > 0 ? (
         <>
           {imgSrcArr.map((src, idx) => (
             <img
@@ -224,6 +259,16 @@ const ReceiptDetails = () => {
             />
           ))}
         </>
+      ):(
+        <Button
+        variant="contained"
+        color="success"
+        fullWidth
+        onClick={() => refresh_data()}
+        style={{ marginBottom: 10, marginTop: 8 }}
+      >
+        REFRESH
+      </Button>
       )}
 
       <Button
@@ -236,6 +281,7 @@ const ReceiptDetails = () => {
       >
         Whatsapp
       </Button>
+   
 
       {/* Print & Download Buttons */}
       <div style={{ display: "flex", gap: 12, marginBottom: 24 }}>
